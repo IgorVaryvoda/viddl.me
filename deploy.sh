@@ -39,7 +39,7 @@ echo -e "${GREEN}✓ Backend built successfully${NC}"
 # Step 3: Build frontend
 echo -e "\n${YELLOW}[3/6] Building Vue.js frontend...${NC}"
 cd "$FRONTEND_DIR"
-npm install --production
+npm install
 npm run build
 echo -e "${GREEN}✓ Frontend built successfully${NC}"
 
