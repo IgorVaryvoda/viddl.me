@@ -7,28 +7,31 @@ A secure video downloader for YouTube, Twitter, Instagram, TikTok, and other soc
 - **Multiple Platform Support**: YouTube, Twitter/X, Instagram, TikTok, Facebook, Vimeo, Reddit, Twitch
 - **Secure Backend**: Go with Gin framework
 - **Input Sanitization**: URL validation and domain whitelisting
-- **Rate Limiting**: Prevents abuse with IP-based rate limiting
-- **Format Selection**: Choose video quality and format
-- **Lightweight Frontend**: Vue.js 3 with Vite
-- **Automatic Cleanup**: Temporary files are cleaned up automatically
+- **Rate Limiting**: Prevents abuse with IP-based rate limiting (3 requests/minute per IP)
+- **Quality Selection**: Choose from 144p to 4K resolution
+- **MP4-Only Output**: All videos automatically converted to MP4 format
+- **Smart Format Merging**: Automatically merges video and audio streams for best quality
+- **Download Progress**: Real-time progress tracking during downloads
+- **Lightweight Frontend**: Vue.js 3 with Vite and dark theme UI
+- **Automatic Cleanup**: Temporary files cleaned up every 5 minutes
 
 ## Security Features
 
 - URL validation and sanitization
 - Domain whitelist (only allowed platforms)
 - Rate limiting (3 requests per minute per IP)
-- Input validation for all parameters
-- File size limits (500MB max)
-- Automatic temp file cleanup
-- CORS protection
-- Security headers with Helmet equivalent
+- Input validation and regex-based sanitization for all parameters
+- Shell injection prevention with proper argument escaping
+- Automatic temp file cleanup (5-minute intervals)
+- CORS protection with configurable origins
+- No file size limits (handles large 4K videos)
 
 ## Prerequisites
 
 - Go 1.21 or higher
 - Node.js 18 or higher
 - yt-dlp installed and available in PATH
-- ffmpeg (optional, for merging video/audio formats)
+- ffmpeg (required for merging video/audio streams)
 
 ### Installing yt-dlp
 
@@ -43,6 +46,24 @@ sudo chmod a+rx /usr/local/bin/yt-dlp
 pip install yt-dlp
 ```
 
+### Installing ffmpeg
+
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt update
+sudo apt install ffmpeg
+```
+
+**macOS:**
+```bash
+brew install ffmpeg
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S ffmpeg
+```
+
 ## Setup
 
 ### Backend (Go)
@@ -51,10 +72,11 @@ pip install yt-dlp
 cd backend
 go mod download
 cp .env.example .env
-go run main.go
+# Edit .env if needed
+PORT=3000 go run main.go
 ```
 
-The backend will start on port 3000 by default.
+The backend will start on port 3000 by default and listen on `http://localhost:3000`.
 
 ### Frontend (Vue.js)
 
@@ -64,7 +86,7 @@ npm install
 npm run dev
 ```
 
-The frontend will start on port 5173 by default.
+The frontend will start on `http://localhost:5173` with hot module replacement enabled. The Vite dev server automatically proxies `/api` requests to the backend.
 
 ## Environment Variables
 
