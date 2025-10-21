@@ -2,7 +2,15 @@
   <div class="container">
     <header>
       <h1>viddl.me</h1>
-      <p class="subtitle">Download videos from YouTube, Twitter, Instagram, and more</p>
+      <p class="subtitle">Fast & free video downloader</p>
+
+      <div class="supported-sites-top">
+        <span class="site-tag">YouTube</span>
+        <span class="site-tag">Twitter/X</span>
+        <span class="site-tag">Instagram</span>
+        <span class="site-tag">Facebook</span>
+        <span class="site-tag">+4 more</span>
+      </div>
     </header>
 
     <div class="input-group">
@@ -73,19 +81,9 @@
       </button>
     </div>
 
-    <div class="supported-sites">
-      <p>Supported platforms:</p>
-      <div class="sites">
-        <span class="site-tag">YouTube</span>
-        <span class="site-tag">Twitter/X</span>
-        <span class="site-tag">Instagram</span>
-        <span class="site-tag">TikTok</span>
-        <span class="site-tag">Facebook</span>
-        <span class="site-tag">Vimeo</span>
-        <span class="site-tag">Reddit</span>
-        <span class="site-tag">Twitch</span>
-      </div>
-    </div>
+    <footer class="footer">
+      <p>Free & open source • <a href="https://github.com/IgorVaryvoda/viddl.me" target="_blank" rel="noopener">GitHub</a></p>
+    </footer>
   </div>
 </template>
 
