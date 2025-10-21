@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <header>
+    <header :class="{ 'header-minimal': videoInfo }">
       <h1>viddl.me</h1>
-      <p class="subtitle">Fast & free video downloader</p>
+      <p class="subtitle" v-if="!videoInfo">Fast & free video downloader</p>
 
-      <div class="supported-sites-top">
+      <div class="supported-sites-top" v-if="!videoInfo">
         <span class="site-tag">YouTube</span>
         <span class="site-tag">Twitter/X</span>
         <span class="site-tag">Instagram</span>
