@@ -36,12 +36,17 @@ cd "$BACKEND_DIR"
 go build -o viddl-server main.go
 echo -e "${GREEN}✓ Backend built successfully${NC}"
 
-# Step 3: Build frontend
-echo -e "\n${YELLOW}[3/6] Building Vue.js frontend...${NC}"
+# Step 3: Build frontend (only if changes detected)
+echo -e "\n${YELLOW}[3/6] Checking frontend changes...${NC}"
 cd "$FRONTEND_DIR"
-npm install
-npm run build
-echo -e "${GREEN}✓ Frontend built successfully${NC}"
+if git diff --quiet HEAD@{1} HEAD -- .; then
+    echo -e "${GREEN}✓ No frontend changes, skipping build${NC}"
+else
+    echo -e "${YELLOW}Frontend changes detected, rebuilding...${NC}"
+    npm install
+    npm run build
+    echo -e "${GREEN}✓ Frontend built successfully${NC}"
+fi
 
 # Step 4: Set correct permissions
 echo -e "\n${YELLOW}[4/6] Setting permissions...${NC}"
