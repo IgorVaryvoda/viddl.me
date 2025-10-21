@@ -163,9 +163,9 @@ func getVideoInfo(c *gin.Context) {
 	}
 
 	cmd := exec.Command("yt-dlp", "--dump-json", "--no-playlist", sanitizedURL)
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("yt-dlp error: %v", err)
+		log.Printf("yt-dlp error: %v, output: %s", err, string(output))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to fetch video information"})
 		return
 	}
