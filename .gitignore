@@ -1,0 +1,11 @@
+.env
+*.log
+tmp/
+dist/
+node_modules/
+
+backend/tmp/
+backend/viddl-server
+
+frontend/dist/
+frontend/node_modules/
