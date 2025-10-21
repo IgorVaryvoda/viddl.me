@@ -1,0 +1,27 @@
+[Unit]
+Description=Viddl.me Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/viddl.me/backend
+ExecStart=/var/www/viddl.me/backend/viddl-server
+Restart=always
+RestartSec=5s
+
+Environment="PORT=3000"
+Environment="ALLOWED_ORIGINS=https://viddl.me,https://www.viddl.me"
+Environment="YTDLP_COOKIES=/var/www/viddl.me/backend/cookies.txt"
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=viddl
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

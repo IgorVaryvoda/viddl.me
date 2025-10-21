@@ -162,7 +162,16 @@ func getVideoInfo(c *gin.Context) {
 		return
 	}
 
-	cmd := exec.Command("yt-dlp", "--dump-json", "--no-playlist", sanitizedURL)
+	args := []string{"--dump-json", "--no-playlist"}
+
+	cookiesFile := os.Getenv("YTDLP_COOKIES")
+	if cookiesFile != "" {
+		args = append(args, "--cookies", cookiesFile)
+	}
+
+	args = append(args, sanitizedURL)
+
+	cmd := exec.Command("yt-dlp", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("yt-dlp error: %v, output: %s", err, string(output))
@@ -273,12 +282,16 @@ func downloadVideo(c *gin.Context) {
 
 	log.Printf("Downloading with format: %s for URL: %s", formatSpec, sanitizedURL)
 
-	cmd := exec.Command("yt-dlp",
-		"-f", formatSpec,
-		"-o", outputTemplate,
-		"--no-playlist",
-		"--merge-output-format", "mp4",
-		sanitizedURL)
+	dlArgs := []string{"-f", formatSpec, "-o", outputTemplate, "--no-playlist", "--merge-output-format", "mp4"}
+
+	cookiesFile := os.Getenv("YTDLP_COOKIES")
+	if cookiesFile != "" {
+		dlArgs = append(dlArgs, "--cookies", cookiesFile)
+	}
+
+	dlArgs = append(dlArgs, sanitizedURL)
+
+	cmd := exec.Command("yt-dlp", dlArgs...)
 
 	if err := cmd.Run(); err != nil {
 		log.Printf("yt-dlp download error: %v", err)
