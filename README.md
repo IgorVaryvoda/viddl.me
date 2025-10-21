@@ -17,14 +17,15 @@ A secure video downloader for YouTube, Twitter, Instagram, TikTok, and other soc
 
 ## Security Features
 
-- URL validation and sanitization
-- Domain whitelist (only allowed platforms)
-- Rate limiting (3 requests per minute per IP)
-- Input validation and regex-based sanitization for all parameters
-- Shell injection prevention with proper argument escaping
-- Automatic temp file cleanup (5-minute intervals)
-- CORS protection with configurable origins
-- No file size limits (handles large 4K videos)
+- **Thread-safe rate limiting** with automatic cleanup
+- **URL validation and sanitization** with domain whitelist
+- **Command injection protection** with strict input validation
+- **Security headers** (X-Content-Type-Options, X-Frame-Options, CSP, etc.)
+- **File size limits** (configurable, 2GB default)
+- **Automatic temp file cleanup** (5-minute intervals)
+- **CORS protection** with configurable origins
+- **Structured logging** with severity levels
+- **Health check monitoring** (yt-dlp and filesystem checks)
 
 ## Prerequisites
 
@@ -90,12 +91,33 @@ The frontend will start on `http://localhost:5173` with hot module replacement e
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory:
+Create a `.env` file in the backend directory or set these environment variables:
 
 ```env
-PORT=3000
-ALLOWED_ORIGINS=http://localhost:5173,https://viddl.me
+# Server Configuration
+PORT=3000                                    # Server port (default: 3000)
+
+# CORS Configuration
+ALLOWED_ORIGINS=http://localhost:5173,https://viddl.me  # Comma-separated allowed origins
+
+# Domain Whitelist (optional)
+ALLOWED_DOMAINS=youtube.com,youtu.be,twitter.com,x.com,instagram.com,facebook.com,tiktok.com,vimeo.com,reddit.com,twitch.tv
+# If not set, uses default list above
+
+# Download Limits
+MAX_DOWNLOAD_SIZE=2G                         # Maximum file size (e.g., 2G, 500M) (default: 2G)
+
+# yt-dlp Configuration
+YTDLP_COOKIES=/path/to/cookies.txt          # Optional: Path to cookies file for authenticated downloads
 ```
+
+### Environment Variable Details
+
+- **PORT**: The port on which the backend server runs (default: 3000)
+- **ALLOWED_ORIGINS**: Comma-separated list of allowed CORS origins for the frontend
+- **ALLOWED_DOMAINS**: Comma-separated list of allowed video platform domains (overrides defaults)
+- **MAX_DOWNLOAD_SIZE**: Maximum allowed file size for downloads (uses yt-dlp syntax: K, M, G)
+- **YTDLP_COOKIES**: Path to a Netscape-format cookies file for downloading age-restricted or private videos
 
 ## Production Deployment
 
@@ -107,7 +129,7 @@ go build -o viddl-server main.go
 ./viddl-server
 ```
 
-Or use systemd service:
+Or use systemd service. Create `/etc/systemd/system/viddl.service`:
 
 ```ini
 [Unit]
@@ -119,12 +141,38 @@ Type=simple
 User=www-data
 WorkingDirectory=/var/www/viddl.me/backend
 ExecStart=/var/www/viddl.me/backend/viddl-server
-Restart=on-failure
+Restart=always
+RestartSec=5s
+
 Environment="PORT=3000"
-Environment="ALLOWED_ORIGINS=https://viddl.me"
+Environment="ALLOWED_ORIGINS=https://viddl.me,https://www.viddl.me"
+Environment="MAX_DOWNLOAD_SIZE=2G"
+Environment="YTDLP_COOKIES=/var/www/viddl.me/cookies.txt"
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=viddl
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
+```
+
+**Enable and start the service:**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable viddl.service
+sudo systemctl start viddl.service
+sudo systemctl status viddl.service
+```
+
+**View logs:**
+```bash
+sudo journalctl -u viddl.service -f
 ```
 
 ### Frontend
@@ -208,12 +256,21 @@ Download video.
 
 ### GET /health
 
-Health check endpoint.
+Health check endpoint that verifies yt-dlp availability and filesystem writability.
 
-**Response:**
+**Response (Healthy):**
 ```json
 {
-  "status": "ok"
+  "status": "healthy",
+  "version": "1.0.0"
+}
+```
+
+**Response (Unhealthy):**
+```json
+{
+  "status": "unhealthy",
+  "error": "yt-dlp not available"
 }
 ```
 
@@ -244,6 +301,23 @@ The frontend dev server proxies API requests to the backend.
 - Consider implementing user accounts and quotas for production
 - Add CAPTCHA for additional abuse prevention
 - Monitor and adjust rate limits based on your needs
+- Set appropriate MAX_DOWNLOAD_SIZE to prevent disk space exhaustion
+- Regularly review logs for suspicious activity
+- Use the /health endpoint for monitoring and alerting
+
+## Recent Security Improvements
+
+- **v1.0.0** (2025-10-21):
+  - Added thread-safe rate limiting with mutex protection
+  - Fixed memory leak in rate limiter with automatic cleanup
+  - Strengthened format parameter validation to prevent command injection
+  - Fixed blocking file cleanup issue by using goroutines
+  - Added comprehensive security headers middleware
+  - Implemented proper health check monitoring
+  - Added file size limits with configurable MAX_DOWNLOAD_SIZE
+  - Improved structured logging with severity levels
+  - Made domain whitelist configurable via environment variables
+  - Optimized file cleanup mechanism with better error handling
 
 ## License
 
