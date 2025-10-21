@@ -166,11 +166,15 @@ func getVideoInfo(c *gin.Context) {
 
 	cookiesFile := os.Getenv("YTDLP_COOKIES")
 	if cookiesFile != "" {
+		log.Printf("Using cookies file: %s", cookiesFile)
 		args = append(args, "--cookies", cookiesFile)
+	} else {
+		log.Printf("WARNING: No cookies file configured (YTDLP_COOKIES not set)")
 	}
 
 	args = append(args, sanitizedURL)
 
+	log.Printf("Running yt-dlp with args: %v", args)
 	cmd := exec.Command("yt-dlp", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
