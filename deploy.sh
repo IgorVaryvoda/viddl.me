@@ -55,8 +55,10 @@ chmod +x "$BACKEND_DIR/viddl-server"
 chmod 755 "$BACKEND_DIR/tmp" 2>/dev/null || mkdir -p "$BACKEND_DIR/tmp" && chmod 755 "$BACKEND_DIR/tmp"
 echo -e "${GREEN}✓ Permissions set${NC}"
 
-# Step 5: Restart backend service
-echo -e "\n${YELLOW}[5/6] Restarting backend service...${NC}"
+# Step 5: Update and restart backend service
+echo -e "\n${YELLOW}[5/6] Updating systemd service and restarting...${NC}"
+cp "$PROJECT_DIR/viddl.service" "/etc/systemd/system/$SERVICE_NAME"
+systemctl daemon-reload
 systemctl restart "$SERVICE_NAME"
 sleep 2
 
