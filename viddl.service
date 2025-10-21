@@ -10,7 +10,7 @@ ExecStart=/var/www/viddl.me/backend/viddl-server
 Restart=always
 RestartSec=5s
 
-Environment="PORT=3000"
+Environment="PORT=3033"
 Environment="ALLOWED_ORIGINS=https://viddl.me,https://www.viddl.me"
 Environment="YTDLP_COOKIES=/var/www/viddl.me/backend/cookies.txt"
 
