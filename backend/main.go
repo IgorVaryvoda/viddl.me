@@ -53,11 +53,20 @@ func init() {
 }
 
 type VideoInfo struct {
-	Title     string       `json:"title"`
-	Thumbnail string       `json:"thumbnail"`
-	Duration  float64      `json:"duration"`
-	Uploader  string       `json:"uploader"`
-	Formats   []FormatInfo `json:"formats"`
+	Title        string       `json:"title"`
+	Thumbnail    string       `json:"thumbnail"`
+	Duration     float64      `json:"duration"`
+	Uploader     string       `json:"uploader"`
+	Formats      []FormatInfo `json:"formats"`
+	MultiVideos  []VideoEntry `json:"multi_videos,omitempty"`
+	IsMultiVideo bool         `json:"is_multi_video"`
+}
+
+type VideoEntry struct {
+	Index     int     `json:"index"`
+	Title     string  `json:"title"`
+	Thumbnail string  `json:"thumbnail"`
+	Duration  float64 `json:"duration"`
 }
 
 type FormatInfo struct {
@@ -90,8 +99,9 @@ type YtDlpInfo struct {
 }
 
 type DownloadRequest struct {
-	URL    string `json:"url" binding:"required"`
-	Format string `json:"format"`
+	URL        string `json:"url" binding:"required"`
+	Format     string `json:"format"`
+	VideoIndex int    `json:"video_index"`
 }
 
 type IPRateLimiter struct {
@@ -237,9 +247,70 @@ func getVideoInfo(c *gin.Context) {
 		return
 	}
 
-	args := []string{"--dump-json", "--no-playlist"}
+	// First check if this URL contains multiple videos (playlist detection)
+	checkArgs := []string{"--flat-playlist", "--dump-json"}
 
 	cookiesFile := os.Getenv("YTDLP_COOKIES")
+	if cookiesFile != "" {
+		checkArgs = append(checkArgs, "--cookies", cookiesFile)
+	}
+
+	checkArgs = append(checkArgs, sanitizedURL)
+
+	log.Printf("INFO: Checking for multiple videos with args: %v", checkArgs)
+	checkCmd := exec.Command("yt-dlp", checkArgs...)
+	checkOutput, err := checkCmd.CombinedOutput()
+
+	// Parse each line as a separate JSON entry
+	multiVideos := []VideoEntry{}
+	if err == nil {
+		lines := strings.Split(string(checkOutput), "\n")
+		for i, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			var entry map[string]any
+			if json.Unmarshal([]byte(line), &entry) == nil {
+				if entry["_type"] == "url" || entry["_type"] == "video" {
+					title := ""
+					if t, ok := entry["title"].(string); ok {
+						title = t
+					}
+					thumbnail := ""
+					if t, ok := entry["thumbnail"].(string); ok {
+						thumbnail = t
+					}
+					duration := 0.0
+					if d, ok := entry["duration"].(float64); ok {
+						duration = d
+					}
+
+					multiVideos = append(multiVideos, VideoEntry{
+						Index:     i + 1,
+						Title:     title,
+						Thumbnail: thumbnail,
+						Duration:  duration,
+					})
+				}
+			}
+		}
+	}
+
+	// If multiple videos detected, return the list
+	if len(multiVideos) > 1 {
+		log.Printf("INFO: Detected %d videos in URL", len(multiVideos))
+		info := VideoInfo{
+			Title:        fmt.Sprintf("Multiple videos (%d)", len(multiVideos)),
+			IsMultiVideo: true,
+			MultiVideos:  multiVideos,
+		}
+		c.JSON(http.StatusOK, info)
+		return
+	}
+
+	// Single video - proceed with normal flow
+	args := []string{"--dump-json", "--no-playlist"}
+
 	if cookiesFile != "" {
 		log.Printf("INFO: Using cookies file: %s", cookiesFile)
 		args = append(args, "--cookies", cookiesFile)
@@ -314,11 +385,12 @@ func getVideoInfo(c *gin.Context) {
 	}
 
 	info := VideoInfo{
-		Title:     ytdlpInfo.Title,
-		Thumbnail: ytdlpInfo.Thumbnail,
-		Duration:  ytdlpInfo.Duration,
-		Uploader:  ytdlpInfo.Uploader,
-		Formats:   formats,
+		Title:        ytdlpInfo.Title,
+		Thumbnail:    ytdlpInfo.Thumbnail,
+		Duration:     ytdlpInfo.Duration,
+		Uploader:     ytdlpInfo.Uploader,
+		Formats:      formats,
+		IsMultiVideo: false,
 	}
 
 	c.JSON(http.StatusOK, info)
@@ -363,7 +435,15 @@ func downloadVideo(c *gin.Context) {
 
 	log.Printf("INFO: Downloading with format: %s for URL: %s", formatSpec, sanitizedURL)
 
-	dlArgs := []string{"-f", formatSpec, "-o", outputTemplate, "--no-playlist", "--merge-output-format", "mp4"}
+	dlArgs := []string{"-f", formatSpec, "-o", outputTemplate, "--merge-output-format", "mp4"}
+
+	// If video index is specified, use playlist items to select specific video
+	if req.VideoIndex > 0 {
+		dlArgs = append(dlArgs, "--playlist-items", fmt.Sprintf("%d", req.VideoIndex))
+		log.Printf("INFO: Downloading video index: %d", req.VideoIndex)
+	} else {
+		dlArgs = append(dlArgs, "--no-playlist")
+	}
 
 	// Add max filesize limit (2GB default, configurable via env)
 	maxFilesize := os.Getenv("MAX_DOWNLOAD_SIZE")

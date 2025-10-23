@@ -41,44 +41,73 @@
     </div>
 
     <div v-if="videoInfo && !loading" class="video-info">
-      <div class="video-header">
-        <img
-          v-if="videoInfo.thumbnail"
-          :src="videoInfo.thumbnail"
-          :alt="videoInfo.title"
-          class="thumbnail"
-        />
-        <div class="video-meta">
-          <h3>{{ videoInfo.title }}</h3>
-          <p>{{ videoInfo.uploader }}</p>
-          <p>{{ formatDuration(videoInfo.duration) }}</p>
-        </div>
-      </div>
-
-      <div v-if="videoInfo.formats && videoInfo.formats.length > 0" class="formats">
-        <h4>Select Quality (MP4)</h4>
-        <div class="format-grid">
+      <!-- Multi-video selection -->
+      <div v-if="videoInfo.is_multi_video" class="multi-video-selection">
+        <h4>Select Video to Download</h4>
+        <div class="video-list">
           <button
-            v-for="format in videoInfo.formats"
-            :key="format.format_id"
-            @click="downloadVideo(format.format_id)"
+            v-for="video in videoInfo.multi_videos"
+            :key="video.index"
+            @click="selectVideo(video.index)"
             :disabled="downloading"
-            class="format-btn"
+            class="video-item-btn"
           >
-            <span class="format-quality">{{ format.quality }}</span>
-            <span class="format-size">{{ formatSize(format.filesize) }}</span>
+            <img
+              v-if="video.thumbnail"
+              :src="video.thumbnail"
+              :alt="video.title"
+              class="video-item-thumbnail"
+            />
+            <div class="video-item-meta">
+              <span class="video-item-number">Video {{ video.index }}</span>
+              <span class="video-item-title">{{ video.title || 'Untitled' }}</span>
+              <span class="video-item-duration">{{ formatDuration(video.duration) }}</span>
+            </div>
           </button>
         </div>
       </div>
 
-      <button
-        v-else
-        @click="downloadVideo('best')"
-        :disabled="downloading"
-        style="width: 100%; margin-top: 1rem;"
-      >
-        {{ downloading ? 'Downloading...' : 'Download Best Quality' }}
-      </button>
+      <!-- Single video display -->
+      <div v-else>
+        <div class="video-header">
+          <img
+            v-if="videoInfo.thumbnail"
+            :src="videoInfo.thumbnail"
+            :alt="videoInfo.title"
+            class="thumbnail"
+          />
+          <div class="video-meta">
+            <h3>{{ videoInfo.title }}</h3>
+            <p>{{ videoInfo.uploader }}</p>
+            <p>{{ formatDuration(videoInfo.duration) }}</p>
+          </div>
+        </div>
+
+        <div v-if="videoInfo.formats && videoInfo.formats.length > 0" class="formats">
+          <h4>Select Quality (MP4)</h4>
+          <div class="format-grid">
+            <button
+              v-for="format in videoInfo.formats"
+              :key="format.format_id"
+              @click="downloadVideo(format.format_id)"
+              :disabled="downloading"
+              class="format-btn"
+            >
+              <span class="format-quality">{{ format.quality }}</span>
+              <span class="format-size">{{ formatSize(format.filesize) }}</span>
+            </button>
+          </div>
+        </div>
+
+        <button
+          v-else
+          @click="downloadVideo('best')"
+          :disabled="downloading"
+          style="width: 100%; margin-top: 1rem;"
+        >
+          {{ downloading ? 'Downloading...' : 'Download Best Quality' }}
+        </button>
+      </div>
     </div>
 
     <footer class="footer">
@@ -97,6 +126,7 @@ const error = ref('')
 const loading = ref(false)
 const downloading = ref(false)
 const downloadProgress = ref('')
+const selectedVideoIndex = ref(0)
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -106,6 +136,7 @@ const fetchVideoInfo = async () => {
   error.value = ''
   loading.value = true
   videoInfo.value = null
+  selectedVideoIndex.value = 0
 
   try {
     const response = await axios.post(`${API_URL}/info`, {
@@ -119,7 +150,12 @@ const fetchVideoInfo = async () => {
   }
 }
 
-const downloadVideo = async (format) => {
+const selectVideo = async (index) => {
+  selectedVideoIndex.value = index
+  downloadVideo('best', index)
+}
+
+const downloadVideo = async (format, videoIndex = 0) => {
   downloading.value = true
   error.value = ''
   downloadProgress.value = 'Preparing download...'
@@ -127,12 +163,18 @@ const downloadVideo = async (format) => {
   try {
     downloadProgress.value = 'Fetching video from server...'
 
+    const requestData = {
+      url: url.value,
+      format: format
+    }
+
+    if (videoIndex > 0) {
+      requestData.video_index = videoIndex
+    }
+
     const response = await axios.post(
       `${API_URL}/download`,
-      {
-        url: url.value,
-        format: format
-      },
+      requestData,
       {
         responseType: 'blob',
         onDownloadProgress: (progressEvent) => {
