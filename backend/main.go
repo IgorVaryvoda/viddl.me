@@ -335,6 +335,9 @@ func getVideoInfo(c *gin.Context) {
 		return
 	}
 
+	// Detect if URL is from Instagram for better filesize estimation
+	isInstagram := strings.Contains(strings.ToLower(sanitizedURL), "instagram.com")
+
 	formats := []FormatInfo{}
 	seen := make(map[int]bool)
 
@@ -369,7 +372,19 @@ func getVideoInfo(c *gin.Context) {
 
 		estimatedSize := f.Filesize
 		if estimatedSize == 0 && f.Height > 0 {
-			estimatedSize = int64(f.Height * f.Height * 100)
+			// Improved estimation for Instagram and other platforms
+			// Instagram videos are typically well-compressed
+			if isInstagram {
+				// Instagram uses efficient compression: roughly 0.15-0.25 MB per second at 720p
+				// Approximate: duration * height * 200 bytes per pixel per second
+				if ytdlpInfo.Duration > 0 {
+					estimatedSize = int64(ytdlpInfo.Duration * float64(f.Height) * 200)
+				} else {
+					estimatedSize = int64(f.Height * f.Height * 80) // More conservative for Instagram
+				}
+			} else {
+				estimatedSize = int64(f.Height * f.Height * 100)
+			}
 		}
 
 		formats = append(formats, FormatInfo{
@@ -428,9 +443,21 @@ func downloadVideo(c *gin.Context) {
 
 	outputTemplate := filepath.Join(tmpDir, sessionID+".%(ext)s")
 
+	// Detect if URL is from Instagram
+	isInstagram := strings.Contains(strings.ToLower(sanitizedURL), "instagram.com")
+
 	formatSpec := "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best"
 	if format != "best" {
 		formatSpec = fmt.Sprintf("%s+bestaudio/%s+bestaudio[ext=m4a]", format, format)
+	}
+
+	// For Instagram, use format 1 which is already in H.264 baseline profile (iPhone compatible)
+	// Format 1 is the progressive download format, NOT the DASH VP9 formats
+	if isInstagram {
+		// Format 1 is the xpv_progressive format which is already H.264 baseline
+		// This avoids VP9 codec which iPhones don't support natively
+		formatSpec = "1/best[vcodec^=avc]/best[ext=mp4]/best"
+		log.Printf("INFO: Instagram URL detected, using format 1 (H.264 baseline for iPhone)")
 	}
 
 	log.Printf("INFO: Downloading with format: %s for URL: %s", formatSpec, sanitizedURL)
@@ -477,6 +504,16 @@ func downloadVideo(c *gin.Context) {
 	filePath := files[0]
 	fileName := filepath.Base(filePath)
 
+	// Get actual file size for Content-Length header
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		log.Printf("ERROR: Failed to stat file %s: %v", filePath, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file info"})
+		return
+	}
+	fileSize := fileInfo.Size()
+	log.Printf("INFO: File size: %d bytes (%.2f MB)", fileSize, float64(fileSize)/(1024*1024))
+
 	// Cleanup file asynchronously after serving
 	log.Printf("INFO: Serving file: %s to client: %s", fileName, c.ClientIP())
 	go func(path string) {
@@ -491,6 +528,7 @@ func downloadVideo(c *gin.Context) {
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Disposition", "attachment; filename="+fileName)
 	c.Header("Content-Type", "video/mp4")
+	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 	c.File(filePath)
 }
 
