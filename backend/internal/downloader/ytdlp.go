@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -10,14 +11,17 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"viddl.me/backend/internal/models"
 )
 
 type Downloader struct {
-	tmpDir      string
-	cookiesFile string
-	maxFilesize string
+	tmpDir        string
+	cookiesFile   string
+	maxFilesize   string
+	healthChecked bool
+	healthError   error
 }
 
 func New(tmpDir, cookiesFile, maxFilesize string) *Downloader {
@@ -29,20 +33,27 @@ func New(tmpDir, cookiesFile, maxFilesize string) *Downloader {
 }
 
 func (d *Downloader) GetVideoInfo(videoURL string) (*models.VideoInfo, error) {
-	multiVideos, err := d.checkMultipleVideos(videoURL)
-	if err == nil && len(multiVideos) > 1 {
-		return &models.VideoInfo{
-			Title:        fmt.Sprintf("Multiple videos (%d)", len(multiVideos)),
-			IsMultiVideo: true,
-			MultiVideos:  multiVideos,
-		}, nil
+	// Skip multi-video check for YouTube single videos (not playlists)
+	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
+		strings.Contains(strings.ToLower(videoURL), "youtu.be")
+	isPlaylist := strings.Contains(videoURL, "/playlist") || strings.Contains(videoURL, "list=")
+
+	if !isYouTube || isPlaylist {
+		multiVideos, err := d.checkMultipleVideos(videoURL)
+		if err == nil && len(multiVideos) > 1 {
+			return &models.VideoInfo{
+				Title:        fmt.Sprintf("Multiple videos (%d)", len(multiVideos)),
+				IsMultiVideo: true,
+				MultiVideos:  multiVideos,
+			}, nil
+		}
 	}
 
 	return d.getSingleVideoInfo(videoURL)
 }
 
 func (d *Downloader) checkMultipleVideos(videoURL string) ([]models.VideoEntry, error) {
-	args := []string{"--flat-playlist", "--dump-json"}
+	args := []string{"--flat-playlist", "--dump-json", "--no-warnings"}
 
 	if d.cookiesFile != "" {
 		args = append(args, "--cookies", d.cookiesFile)
@@ -83,7 +94,7 @@ func (d *Downloader) checkMultipleVideos(videoURL string) ([]models.VideoEntry, 
 }
 
 func (d *Downloader) getSingleVideoInfo(videoURL string) (*models.VideoInfo, error) {
-	args := []string{"--dump-json", "--no-playlist"}
+	args := []string{"--dump-json", "--no-playlist", "--no-warnings"}
 
 	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
 		strings.Contains(strings.ToLower(videoURL), "youtu.be")
@@ -144,15 +155,8 @@ func (d *Downloader) extractFormats(info models.YtDlpInfo, isInstagram bool) []m
 			continue
 		}
 
-		quality := f.FormatNote
-		if quality == "" && f.Height > 0 {
-			quality = fmt.Sprintf("%dp", f.Height)
-		} else if quality == "" && f.Resolution != "" {
-			quality = f.Resolution
-		}
-		if quality == "" || quality == "0" {
-			quality = "unknown"
-		}
+		// Use consistent quality labels based on height
+		quality := getQualityLabel(f.Height)
 
 		seen[f.Height] = true
 
@@ -191,6 +195,9 @@ type DownloadResult struct {
 }
 
 func (d *Downloader) Download(videoURL, format string, videoIndex int) (*DownloadResult, error) {
+	// 10 minute timeout for downloads
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 	if err := os.MkdirAll(d.tmpDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
@@ -200,24 +207,66 @@ func (d *Downloader) Download(videoURL, format string, videoIndex int) (*Downloa
 		return nil, fmt.Errorf("failed to generate session ID: %w", err)
 	}
 
-	outputTemplate := filepath.Join(d.tmpDir, sessionID+".%(ext)s")
+	// Use session ID prefix + title for filename
+	outputTemplate := filepath.Join(d.tmpDir, sessionID+"_%(title).80s.%(ext)s")
 	args := d.buildDownloadArgs(videoURL, format, outputTemplate, videoIndex)
 
-	log.Printf("INFO: Running yt-dlp download with args: %v", args)
-	cmd := exec.Command("yt-dlp", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("ERROR: yt-dlp download error: %v, output: %s", err, string(output))
+	// Retry logic with exponential backoff
+	var output []byte
+	maxRetries := 3
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := time.Duration(1<<uint(attempt-1)) * time.Second
+			log.Printf("INFO: Retry attempt %d/%d after %v", attempt+1, maxRetries, backoff)
+			time.Sleep(backoff)
+		}
+
+		log.Printf("INFO: Running yt-dlp download with args: %v", args)
+		cmd := exec.CommandContext(ctx, "yt-dlp", args...)
+		output, err = cmd.CombinedOutput()
+		if err == nil {
+			break
+		}
+
+		// Check if error is retryable (network issues, temporary failures)
+		outputStr := string(output)
+		if strings.Contains(outputStr, "HTTP Error 5") ||
+			strings.Contains(outputStr, "timed out") ||
+			strings.Contains(outputStr, "Connection reset") {
+			log.Printf("WARN: Retryable error on attempt %d: %v", attempt+1, err)
+			continue
+		}
+
+		// Check if format-specific error - try fallback to best
+		if format != "best" && (strings.Contains(outputStr, "format") || strings.Contains(outputStr, "unavailable")) {
+			log.Printf("WARN: Format %s failed, trying fallback to best", format)
+			fallbackArgs := d.buildDownloadArgs(videoURL, "best", outputTemplate, videoIndex)
+			cmd := exec.CommandContext(ctx, "yt-dlp", fallbackArgs...)
+			output, err = cmd.CombinedOutput()
+			if err == nil {
+				break
+			}
+		}
+
+		// Non-retryable error, fail immediately
+		log.Printf("ERROR: yt-dlp download error: %v, output: %s", err, outputStr)
 		return nil, fmt.Errorf("download failed or file exceeds size limit")
 	}
 
-	files, err := filepath.Glob(filepath.Join(d.tmpDir, sessionID+".*"))
+	if err != nil {
+		log.Printf("ERROR: yt-dlp download failed after %d retries: %v, output: %s", maxRetries, err, string(output))
+		return nil, fmt.Errorf("download failed or file exceeds size limit")
+	}
+
+	files, err := filepath.Glob(filepath.Join(d.tmpDir, sessionID+"_*"))
 	if err != nil || len(files) == 0 {
 		return nil, fmt.Errorf("downloaded file not found")
 	}
 
 	filePath := files[0]
-	fileName := filepath.Base(filePath)
+	// Extract just the title part for the download filename (remove session ID prefix)
+	baseName := filepath.Base(filePath)
+	fileName := strings.TrimPrefix(baseName, sessionID+"_")
 
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
@@ -252,7 +301,7 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 	}
 
 	log.Printf("INFO: Downloading with format: %s", formatSpec)
-	args := []string{"-f", formatSpec, "-o", outputTemplate, "--merge-output-format", "mp4"}
+	args := []string{"-f", formatSpec, "-o", outputTemplate, "--merge-output-format", "mp4", "--no-warnings", "--restrict-filenames"}
 
 	if isYouTube {
 		if d.cookiesFile != "" {
@@ -281,8 +330,13 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 }
 
 func (d *Downloader) CheckHealth() error {
+	if d.healthChecked {
+		return d.healthError
+	}
 	cmd := exec.Command("yt-dlp", "--version")
-	return cmd.Run()
+	d.healthError = cmd.Run()
+	d.healthChecked = true
+	return d.healthError
 }
 
 func generateSessionID() (string, error) {
@@ -292,3 +346,27 @@ func generateSessionID() (string, error) {
 	}
 	return hex.EncodeToString(bytes), nil
 }
+
+func getQualityLabel(height int) string {
+	switch {
+	case height >= 2160:
+		return "4K"
+	case height >= 1440:
+		return "1440p"
+	case height >= 1080:
+		return "1080p"
+	case height >= 720:
+		return "720p"
+	case height >= 480:
+		return "480p"
+	case height >= 360:
+		return "360p"
+	case height >= 240:
+		return "240p"
+	case height >= 144:
+		return "144p"
+	default:
+		return fmt.Sprintf("%dp", height)
+	}
+}
+

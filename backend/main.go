@@ -37,11 +37,12 @@ func main() {
 	r.Use(middleware.Gzip())
 
 	limiter := middleware.NewIPRateLimiter(rate.Every(time.Minute/3), 3)
+	concurrentLimiter := middleware.NewConcurrentDownloadLimiter(2) // Max 2 concurrent downloads per IP
 
 	h := handlers.New(cfg)
 
 	r.POST("/api/info", middleware.RateLimit(limiter), h.GetVideoInfo)
-	r.POST("/api/download", middleware.RateLimit(limiter), h.DownloadVideo)
+	r.POST("/api/download", middleware.RateLimit(limiter), middleware.ConcurrentLimit(concurrentLimiter), h.DownloadVideo)
 	r.GET("/health", h.HealthCheck)
 
 	cleaner := cleanup.New(cfg.TmpDir, 5*time.Minute, 5*time.Minute)
