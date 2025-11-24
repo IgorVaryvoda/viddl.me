@@ -85,6 +85,17 @@ func (d *Downloader) checkMultipleVideos(videoURL string) ([]models.VideoEntry, 
 func (d *Downloader) getSingleVideoInfo(videoURL string) (*models.VideoInfo, error) {
 	args := []string{"--dump-json", "--no-playlist"}
 
+	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
+		strings.Contains(strings.ToLower(videoURL), "youtu.be")
+
+	if isYouTube {
+		if d.cookiesFile != "" {
+			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
+		} else {
+			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
+		}
+	}
+
 	if d.cookiesFile != "" {
 		log.Printf("INFO: Using cookies file: %s", d.cookiesFile)
 		args = append(args, "--cookies", d.cookiesFile)
@@ -93,14 +104,15 @@ func (d *Downloader) getSingleVideoInfo(videoURL string) (*models.VideoInfo, err
 
 	log.Printf("INFO: Running yt-dlp with args: %v", args)
 	cmd := exec.Command("yt-dlp", args...)
-	output, err := cmd.CombinedOutput()
+	output, err := cmd.Output()
 	if err != nil {
-		log.Printf("ERROR: yt-dlp error: %v, output: %s", err, string(output))
+		log.Printf("ERROR: yt-dlp error: %v", err)
 		return nil, fmt.Errorf("failed to fetch video information")
 	}
 
 	var ytdlpInfo models.YtDlpInfo
 	if err := json.Unmarshal(output, &ytdlpInfo); err != nil {
+		log.Printf("ERROR: JSON parse error: %v, output: %s", err, string(output[:min(500, len(output))]))
 		return nil, fmt.Errorf("failed to parse video information")
 	}
 
@@ -226,6 +238,8 @@ func (d *Downloader) Download(videoURL, format string, videoIndex int) (*Downloa
 
 func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, videoIndex int) []string {
 	isInstagram := strings.Contains(strings.ToLower(videoURL), "instagram.com")
+	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
+		strings.Contains(strings.ToLower(videoURL), "youtu.be")
 
 	formatSpec := "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bv*+ba/b"
 	if format != "best" {
@@ -239,6 +253,15 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 
 	log.Printf("INFO: Downloading with format: %s", formatSpec)
 	args := []string{"-f", formatSpec, "-o", outputTemplate, "--merge-output-format", "mp4"}
+
+	if isYouTube {
+		if d.cookiesFile != "" {
+			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
+		} else {
+			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
+		}
+		log.Printf("INFO: YouTube URL detected, using web_safari player client")
+	}
 
 	if videoIndex > 0 {
 		args = append(args, "--playlist-items", fmt.Sprintf("%d", videoIndex))
