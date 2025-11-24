@@ -14,16 +14,34 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://viddl.me">
   <meta property="og:site_name" content="viddl.me">
+  <meta property="og:image" content="https://viddl.me/og-image.png">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="viddl.me - Fast & Free Video Downloader">
   <meta name="twitter:description" content="Download videos from YouTube, Twitter/X, Instagram, TikTok, Facebook, and more. Fast, free, and easy to use.">
+  <meta name="twitter:image" content="https://viddl.me/og-image.png">
 
-  <meta name="theme-color" content="#ff6b35">
+  <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
   <link rel="canonical" href="https://viddl.me">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
   <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

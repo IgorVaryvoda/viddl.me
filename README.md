@@ -5,6 +5,7 @@ A secure video downloader for YouTube, Twitter, Instagram, TikTok, and other soc
 ## Features
 
 - **Multiple Platform Support**: YouTube, Twitter/X, Instagram, TikTok, Facebook, Vimeo, Reddit, Twitch
+- **Multi-Video Support**: Automatically detects and allows selection from Twitter posts with multiple videos
 - **Secure Backend**: Go with Gin framework
 - **Input Sanitization**: URL validation and domain whitelisting
 - **Rate Limiting**: Prevents abuse with IP-based rate limiting (3 requests/minute per IP)
@@ -222,13 +223,14 @@ Get video information without downloading.
 }
 ```
 
-**Response:**
+**Response (Single Video):**
 ```json
 {
   "title": "Video Title",
   "thumbnail": "https://...",
   "duration": 180,
   "uploader": "Channel Name",
+  "is_multi_video": false,
   "formats": [
     {
       "format_id": "137",
@@ -240,15 +242,52 @@ Get video information without downloading.
 }
 ```
 
+**Response (Multiple Videos - e.g., Twitter post with multiple videos):**
+```json
+{
+  "title": "Multiple videos (3)",
+  "is_multi_video": true,
+  "multi_videos": [
+    {
+      "index": 1,
+      "title": "Video 1",
+      "thumbnail": "https://...",
+      "duration": 60
+    },
+    {
+      "index": 2,
+      "title": "Video 2",
+      "thumbnail": "https://...",
+      "duration": 45
+    },
+    {
+      "index": 3,
+      "title": "Video 3",
+      "thumbnail": "https://...",
+      "duration": 30
+    }
+  ]
+}
+```
+
 ### POST /api/download
 
 Download video.
 
-**Request:**
+**Request (Single Video or Best Quality):**
 ```json
 {
   "url": "https://youtube.com/watch?v=...",
   "format": "best"
+}
+```
+
+**Request (Specific Video from Multi-Video Post):**
+```json
+{
+  "url": "https://twitter.com/user/status/...",
+  "format": "best",
+  "video_index": 2
 }
 ```
 

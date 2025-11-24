@@ -1,16 +1,28 @@
 <template>
-  <div class="container">
+  <div class="container" :class="{ 'light-theme': !isDarkTheme }">
     <header :class="{ 'header-minimal': videoInfo }">
-      <h1>viddl.me</h1>
-      <p class="subtitle" v-if="!videoInfo">Fast & free video downloader</p>
-
-      <div class="supported-sites-top" v-if="!videoInfo">
-        <span class="site-tag">YouTube</span>
-        <span class="site-tag">Twitter/X</span>
-        <span class="site-tag">Instagram</span>
-        <span class="site-tag">Facebook</span>
-        <span class="site-tag">+4 more</span>
+      <div class="header-top">
+        <h1>viddl.me</h1>
+        <div class="header-actions">
+          <button
+            @click="showHistory = !showHistory"
+            class="icon-btn"
+            :class="{ active: showHistory }"
+            aria-label="Toggle download history"
+            v-if="downloadHistory.length > 0"
+          >
+            <span class="icon">📜</span>
+          </button>
+          <button
+            @click="toggleTheme"
+            class="icon-btn"
+            :aria-label="isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'"
+          >
+            <span class="icon">{{ isDarkTheme ? '☀️' : '🌙' }}</span>
+          </button>
+        </div>
       </div>
+      <p class="subtitle" v-if="!videoInfo && !showHistory">Fast & free video downloader</p>
     </header>
 
     <div class="input-group">
@@ -46,6 +58,18 @@
       </button>
     </div>
 
+    <div class="supported-sites" v-if="!videoInfo && !showHistory">
+      <span>YouTube</span>
+      <span class="separator">•</span>
+      <span>Twitter/X</span>
+      <span class="separator">•</span>
+      <span>Instagram</span>
+      <span class="separator">•</span>
+      <span>Facebook</span>
+      <span class="separator">•</span>
+      <span>+4 more</span>
+    </div>
+
     <div v-if="urlError" class="url-hint">
       {{ urlError }}
     </div>
@@ -57,6 +81,48 @@
         <button v-if="canRetry" @click="retryLastAction" class="retry-btn" aria-label="Retry failed operation">
           Retry
         </button>
+      </div>
+    </div>
+
+    <!-- Download History Panel -->
+    <div v-if="showHistory" class="history-panel">
+      <div class="history-header">
+        <h3>Download History</h3>
+        <button @click="clearHistory" class="clear-history-btn" aria-label="Clear download history">
+          Clear All
+        </button>
+      </div>
+      <div v-if="downloadHistory.length === 0" class="history-empty">
+        No downloads yet
+      </div>
+      <div v-else class="history-list">
+        <div
+          v-for="(item, index) in downloadHistory"
+          :key="index"
+          class="history-item"
+        >
+          <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.title" class="history-thumbnail" />
+          <div class="history-info">
+            <p class="history-title">{{ item.title }}</p>
+            <p class="history-meta">{{ item.type }} • {{ formatDate(item.date) }}</p>
+          </div>
+          <button
+            @click="redownload(item)"
+            class="history-redownload"
+            aria-label="Download again"
+          >
+            ↓
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download Queue -->
+    <div v-if="downloadQueue.length > 0" class="download-queue">
+      <h4>Download Queue ({{ downloadQueue.length }})</h4>
+      <div v-for="(item, index) in downloadQueue" :key="index" class="queue-item">
+        <span class="queue-title">{{ item.title || 'Video' }}</span>
+        <span class="queue-status">{{ item.status }}</span>
       </div>
     </div>
 
@@ -157,6 +223,7 @@
         >
           {{ downloading ? 'Downloading...' : 'Download Best Quality' }}
         </button>
+
       </div>
     </div>
 
@@ -167,7 +234,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 const url = ref('')
@@ -194,7 +261,99 @@ const MAX_RETRIES = 2
 const videoInfoCache = ref(new Map())
 const CACHE_DURATION = 5 * 60 * 1000
 
+// Theme
+const isDarkTheme = ref(true)
+
+// Download history
+const showHistory = ref(false)
+const downloadHistory = ref([])
+const HISTORY_KEY = 'viddl_download_history'
+const MAX_HISTORY_ITEMS = 50
+
+// Download queue
+const downloadQueue = ref([])
+const MAX_CONCURRENT_DOWNLOADS = 2
+let activeDownloads = 0
+
 const API_URL = import.meta.env.VITE_API_URL || '/api'
+
+// Initialize theme and history from localStorage
+onMounted(() => {
+  const savedTheme = localStorage.getItem('viddl_theme')
+  if (savedTheme) {
+    isDarkTheme.value = savedTheme === 'dark'
+  } else {
+    isDarkTheme.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  applyTheme()
+
+  const savedHistory = localStorage.getItem(HISTORY_KEY)
+  if (savedHistory) {
+    try {
+      downloadHistory.value = JSON.parse(savedHistory)
+    } catch {
+      downloadHistory.value = []
+    }
+  }
+})
+
+const toggleTheme = () => {
+  isDarkTheme.value = !isDarkTheme.value
+  localStorage.setItem('viddl_theme', isDarkTheme.value ? 'dark' : 'light')
+  applyTheme()
+}
+
+const applyTheme = () => {
+  document.documentElement.style.setProperty('--bg', isDarkTheme.value ? '#0f172a' : '#f8fafc')
+  document.documentElement.style.setProperty('--bg-secondary', isDarkTheme.value ? '#1e293b' : '#e2e8f0')
+  document.documentElement.style.setProperty('--text', isDarkTheme.value ? '#f1f5f9' : '#0f172a')
+  document.documentElement.style.setProperty('--text-secondary', isDarkTheme.value ? '#94a3b8' : '#64748b')
+  document.documentElement.style.setProperty('--border', isDarkTheme.value ? '#334155' : '#cbd5e1')
+}
+
+const addToHistory = (item) => {
+  const historyItem = {
+    url: item.url,
+    title: item.title,
+    thumbnail: item.thumbnail,
+    type: item.type || 'video',
+    date: new Date().toISOString()
+  }
+
+  downloadHistory.value = [
+    historyItem,
+    ...downloadHistory.value.filter(h => h.url !== item.url)
+  ].slice(0, MAX_HISTORY_ITEMS)
+
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(downloadHistory.value))
+}
+
+const clearHistory = () => {
+  downloadHistory.value = []
+  localStorage.removeItem(HISTORY_KEY)
+  showHistory.value = false
+}
+
+const redownload = (item) => {
+  url.value = item.url
+  showHistory.value = false
+  fetchVideoInfo()
+}
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
 
 const SUPPORTED_DOMAINS = [
   'youtube.com', 'youtu.be', 'twitter.com', 'x.com',
@@ -444,6 +603,17 @@ const downloadVideo = async (format, videoIndex = 0) => {
 
     downloadProgress.value = 'Download complete!'
     retryCount.value = 0
+
+    // Add to download history
+    if (videoInfo.value) {
+      addToHistory({
+        url: url.value,
+        title: videoInfo.value.title,
+        thumbnail: videoInfo.value.thumbnail,
+        type: 'video'
+      })
+    }
+
     setTimeout(() => {
       downloadProgress.value = ''
     }, 2000)
