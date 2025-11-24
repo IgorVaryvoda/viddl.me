@@ -14,13 +14,23 @@
     </header>
 
     <div class="input-group">
-      <input
-        v-model="url"
-        type="text"
-        placeholder="Paste video URL here..."
-        @keyup.enter="fetchVideoInfo"
-        :disabled="loading"
-      />
+      <div class="input-wrapper">
+        <input
+          v-model="url"
+          type="text"
+          placeholder="Paste video URL here..."
+          @keyup.enter="fetchVideoInfo"
+          :disabled="loading"
+        />
+        <button
+          @click="pasteFromClipboard"
+          class="paste-btn"
+          :disabled="loading"
+          title="Paste from clipboard"
+        >
+          📋
+        </button>
+      </div>
       <button @click="fetchVideoInfo" :disabled="loading || !url">
         {{ loading ? 'Loading...' : 'Get Video' }}
       </button>
@@ -219,6 +229,18 @@ const downloadVideo = async (format, videoIndex = 0) => {
     downloadProgress.value = ''
   } finally {
     downloading.value = false
+  }
+}
+
+const pasteFromClipboard = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    url.value = text.trim()
+  } catch (err) {
+    error.value = 'Failed to read clipboard. Please paste manually or grant clipboard permission.'
+    setTimeout(() => {
+      error.value = ''
+    }, 3000)
   }
 }
 
