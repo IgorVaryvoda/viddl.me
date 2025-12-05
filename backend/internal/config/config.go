@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -31,6 +33,8 @@ var defaultDomains = []string{
 }
 
 func Load() *Config {
+	godotenv.Load()
+
 	cfg := &Config{
 		Port:            getEnv("PORT", "3000"),
 		MaxDownloadSize: getEnv("MAX_DOWNLOAD_SIZE", "2G"),
