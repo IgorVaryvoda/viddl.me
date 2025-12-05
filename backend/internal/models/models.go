@@ -30,6 +30,12 @@ type DownloadRequest struct {
 	VideoIndex int    `json:"video_index"`
 }
 
+type AudioRequest struct {
+	URL         string `json:"url" binding:"required"`
+	AudioFormat string `json:"audio_format"`
+	VideoIndex  int    `json:"video_index"`
+}
+
 type YtDlpFormat struct {
 	FormatID   string  `json:"format_id"`
 	Ext        string  `json:"ext"`

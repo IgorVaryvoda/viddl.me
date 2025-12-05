@@ -329,6 +329,113 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 	return args
 }
 
+func (d *Downloader) ExtractAudio(videoURL, audioFormat string, videoIndex int) (*DownloadResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	if err := os.MkdirAll(d.tmpDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	sessionID, err := generateSessionID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate session ID: %w", err)
+	}
+
+	if audioFormat == "" {
+		audioFormat = "mp3"
+	}
+
+	allowedFormats := map[string]bool{"mp3": true, "m4a": true, "aac": true, "opus": true, "vorbis": true, "flac": true, "wav": true}
+	if !allowedFormats[audioFormat] {
+		audioFormat = "mp3"
+	}
+
+	outputTemplate := filepath.Join(d.tmpDir, sessionID+"_%(title).80s.%(ext)s")
+	args := d.buildAudioArgs(videoURL, audioFormat, outputTemplate, videoIndex)
+
+	log.Printf("INFO: Running yt-dlp audio extraction with args: %v", args)
+	cmd := exec.CommandContext(ctx, "yt-dlp", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("ERROR: yt-dlp audio extraction error: %v, output: %s", err, string(output))
+		return nil, fmt.Errorf("audio extraction failed")
+	}
+
+	files, err := filepath.Glob(filepath.Join(d.tmpDir, sessionID+"_*"))
+	if err != nil || len(files) == 0 {
+		return nil, fmt.Errorf("extracted audio file not found")
+	}
+
+	filePath := files[0]
+	baseName := filepath.Base(filePath)
+	fileName := strings.TrimPrefix(baseName, sessionID+"_")
+
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file info: %w", err)
+	}
+
+	contentType := getAudioContentType(audioFormat)
+	log.Printf("INFO: Audio file size: %d bytes (%.2f MB)", fileInfo.Size(), float64(fileInfo.Size())/(1024*1024))
+
+	return &DownloadResult{
+		FilePath:    filePath,
+		FileName:    fileName,
+		FileSize:    fileInfo.Size(),
+		ContentType: contentType,
+	}, nil
+}
+
+func (d *Downloader) buildAudioArgs(videoURL, audioFormat, outputTemplate string, videoIndex int) []string {
+	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
+		strings.Contains(strings.ToLower(videoURL), "youtu.be")
+
+	args := []string{"-x", "--audio-format", audioFormat, "-o", outputTemplate, "--no-warnings", "--restrict-filenames"}
+
+	if isYouTube {
+		if d.cookiesFile != "" {
+			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
+		} else {
+			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
+		}
+	}
+
+	if videoIndex > 0 {
+		args = append(args, "--playlist-items", fmt.Sprintf("%d", videoIndex))
+	} else {
+		args = append(args, "--no-playlist")
+	}
+
+	args = append(args, "--max-filesize", d.maxFilesize)
+
+	if d.cookiesFile != "" {
+		args = append(args, "--cookies", d.cookiesFile)
+	}
+
+	args = append(args, videoURL)
+	return args
+}
+
+func getAudioContentType(format string) string {
+	switch format {
+	case "mp3":
+		return "audio/mpeg"
+	case "m4a", "aac":
+		return "audio/mp4"
+	case "opus":
+		return "audio/opus"
+	case "vorbis":
+		return "audio/ogg"
+	case "flac":
+		return "audio/flac"
+	case "wav":
+		return "audio/wav"
+	default:
+		return "audio/mpeg"
+	}
+}
+
 func (d *Downloader) CheckHealth() error {
 	if d.healthChecked {
 		return d.healthError

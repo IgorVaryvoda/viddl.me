@@ -83,6 +83,38 @@ func (h *Handler) DownloadVideo(c *gin.Context) {
 	c.File(result.FilePath)
 }
 
+func (h *Handler) ExtractAudio(c *gin.Context) {
+	var req models.AudioRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	sanitizedURL, err := downloader.SanitizeURL(req.URL, h.cfg.AllowedDomains)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("INFO: Audio extraction request from %s for URL: %s, format: %s",
+		c.ClientIP(), sanitizedURL, req.AudioFormat)
+
+	result, err := h.downloader.ExtractAudio(sanitizedURL, req.AudioFormat, req.VideoIndex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("INFO: Serving audio file: %s to client: %s", result.FileName, c.ClientIP())
+	cleanup.ScheduleFileRemoval(result.FilePath, 60*time.Second)
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Disposition", "attachment; filename="+result.FileName)
+	c.Header("Content-Type", result.ContentType)
+	c.Header("Content-Length", fmt.Sprintf("%d", result.FileSize))
+	c.File(result.FilePath)
+}
+
 func (h *Handler) HealthCheck(c *gin.Context) {
 	if err := h.downloader.CheckHealth(); err != nil {
 		c.JSON(http.StatusServiceUnavailable, models.HealthResponse{

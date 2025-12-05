@@ -358,7 +358,7 @@ const formatDate = (dateStr) => {
 const SUPPORTED_DOMAINS = [
   'youtube.com', 'youtu.be', 'twitter.com', 'x.com',
   'instagram.com', 'facebook.com', 'tiktok.com',
-  'vimeo.com', 'reddit.com', 'twitch.tv'
+  'vimeo.com', 'reddit.com', 'twitch.tv', 'sirv.com'
 ]
 
 const ERROR_MESSAGES = {

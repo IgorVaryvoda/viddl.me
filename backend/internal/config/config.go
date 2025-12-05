@@ -13,6 +13,7 @@ type Config struct {
 	MaxDownloadSize string
 	CookiesFile     string
 	TmpDir          string
+	APIKey          string
 }
 
 var defaultDomains = []string{
@@ -26,6 +27,7 @@ var defaultDomains = []string{
 	"vimeo.com",
 	"reddit.com",
 	"twitch.tv",
+	"sirv.com",
 }
 
 func Load() *Config {
@@ -34,6 +36,7 @@ func Load() *Config {
 		MaxDownloadSize: getEnv("MAX_DOWNLOAD_SIZE", "2G"),
 		CookiesFile:     os.Getenv("YTDLP_COOKIES"),
 		TmpDir:          getEnv("TMP_DIR", "./tmp"),
+		APIKey:          os.Getenv("API_KEY"),
 	}
 
 	// Parse allowed origins

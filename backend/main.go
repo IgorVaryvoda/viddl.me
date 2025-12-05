@@ -43,6 +43,7 @@ func main() {
 
 	r.POST("/api/info", middleware.RateLimit(limiter), h.GetVideoInfo)
 	r.POST("/api/download", middleware.RateLimit(limiter), middleware.ConcurrentLimit(concurrentLimiter), h.DownloadVideo)
+	r.POST("/api/audio", middleware.APIKeyAuth(cfg.APIKey), middleware.ConcurrentLimit(concurrentLimiter), h.ExtractAudio)
 	r.GET("/health", h.HealthCheck)
 
 	cleaner := cleanup.New(cfg.TmpDir, 5*time.Minute, 5*time.Minute)
