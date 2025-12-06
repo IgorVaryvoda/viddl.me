@@ -30,6 +30,8 @@ var defaultDomains = []string{
 	"reddit.com",
 	"twitch.tv",
 	"sirv.com",
+	"v3.fal.media",
+	"fal.media",
 }
 
 func Load() *Config {
