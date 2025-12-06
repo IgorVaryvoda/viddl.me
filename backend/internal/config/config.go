@@ -18,6 +18,13 @@ type Config struct {
 	APIKey          string
 }
 
+var defaultOrigins = []string{
+	"http://localhost:5173",
+	"http://localhost:8080",
+	"https://sirv-ai-tools.vercel.app",
+	"https://*.sirv.com",
+}
+
 var defaultDomains = []string{
 	"youtube.com",
 	"youtu.be",
@@ -45,9 +52,18 @@ func Load() *Config {
 		APIKey:          os.Getenv("API_KEY"),
 	}
 
-	// Parse allowed origins
-	origins := getEnv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:8080")
-	cfg.AllowedOrigins = strings.Split(origins, ",")
+	// Parse allowed origins (env var adds to defaults)
+	cfg.AllowedOrigins = append([]string{}, defaultOrigins...)
+	if originsEnv := os.Getenv("ALLOWED_ORIGINS"); originsEnv != "" {
+		for _, origin := range strings.Split(originsEnv, ",") {
+			origin = strings.TrimSpace(origin)
+			// Add https:// if no protocol specified
+			if origin != "*" && !strings.HasPrefix(origin, "http://") && !strings.HasPrefix(origin, "https://") {
+				origin = "https://" + origin
+			}
+			cfg.AllowedOrigins = append(cfg.AllowedOrigins, origin)
+		}
+	}
 
 	// Parse allowed domains
 	domainsEnv := os.Getenv("ALLOWED_DOMAINS")
