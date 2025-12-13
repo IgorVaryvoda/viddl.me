@@ -36,6 +36,7 @@ var defaultDomains = []string{
 	"vimeo.com",
 	"reddit.com",
 	"twitch.tv",
+	"threads.net",
 	"sirv.com",
 	"v3.fal.media",
 	"fal.media",
