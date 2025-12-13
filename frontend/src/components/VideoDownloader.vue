@@ -248,7 +248,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api'
 const SUPPORTED_DOMAINS = [
   'youtube.com', 'youtu.be', 'twitter.com', 'x.com',
   'instagram.com', 'facebook.com', 'vimeo.com',
-  'reddit.com', 'twitch.tv', 'threads.net', 'sirv.com'
+  'reddit.com', 'twitch.tv', 'threads.com', 'sirv.com'
 ]
 
 const ERROR_MESSAGES = {
@@ -639,7 +639,7 @@ const formatSize = (bytes) => {
 .get-btn {
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
-  color: #09090b;
+  color: #fff;
   border: none;
   border-radius: 12px;
   font-family: var(--font-display);
@@ -992,7 +992,7 @@ const formatSize = (bytes) => {
   width: 100%;
   padding: 1.125rem;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
-  color: #09090b;
+  color: #fff;
   border: none;
   border-radius: 10px;
   font-family: var(--font-display);

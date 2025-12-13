@@ -289,7 +289,7 @@ const handleDownloadComplete = (data) => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #09090b;
+  color: #fff;
   margin-bottom: 1rem;
 }
 
@@ -321,7 +321,7 @@ const handleDownloadComplete = (data) => {
 .step:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 20px 40px -20px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 20px 40px -20px rgba(255, 107, 53, 0.25);
 }
 
 .step-number {

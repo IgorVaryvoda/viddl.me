@@ -1,17 +1,17 @@
 :root {
-  --primary: #00f0ff;
-  --primary-dark: #00c8d4;
-  --primary-light: #66f5ff;
-  --primary-glow: rgba(0, 240, 255, 0.4);
+  --primary: #ff6b35;
+  --primary-dark: #e85a28;
+  --primary-light: #ff8f66;
+  --primary-glow: rgba(255, 107, 53, 0.4);
   --bg: #09090b;
   --bg-secondary: #18181b;
   --bg-tertiary: #27272a;
   --text: #fafafa;
   --text-secondary: #a1a1aa;
   --border: #27272a;
-  --accent: #00f0ff;
-  --accent-secondary: #ff0080;
-  --accent-hover: #66f5ff;
+  --accent: #ff6b35;
+  --accent-secondary: #ff9500;
+  --accent-hover: #ff8f66;
   --success: #22c55e;
   --error: #ef4444;
 }
@@ -85,7 +85,7 @@
 
 ::selection {
   background: var(--accent);
-  color: #09090b;
+  color: #fff;
 }
 
 ::-webkit-scrollbar {

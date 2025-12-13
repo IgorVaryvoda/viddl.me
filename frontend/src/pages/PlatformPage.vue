@@ -277,7 +277,7 @@ onMounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #09090b;
+  color: #fff;
   margin-bottom: 1rem;
 }
 

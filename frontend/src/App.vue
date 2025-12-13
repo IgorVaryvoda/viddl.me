@@ -118,10 +118,10 @@ const applyTheme = () => {
   --text: #fafafa;
   --text-secondary: #a1a1aa;
   --border: #27272a;
-  --accent: #00f0ff;
-  --accent-secondary: #ff0080;
-  --accent-glow: rgba(0, 240, 255, 0.4);
-  --accent-secondary-glow: rgba(255, 0, 128, 0.3);
+  --accent: #ff6b35;
+  --accent-secondary: #ff9500;
+  --accent-glow: rgba(255, 107, 53, 0.4);
+  --accent-secondary-glow: rgba(255, 149, 0, 0.3);
   --glow-opacity: 0.6;
   --success: #22c55e;
   --error: #ef4444;

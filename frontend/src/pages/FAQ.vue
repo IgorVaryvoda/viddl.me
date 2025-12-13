@@ -363,7 +363,7 @@ const structuredData = computed(() => JSON.stringify({
   gap: 0.625rem;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
-  color: #09090b;
+  color: #fff;
   text-decoration: none;
   border-radius: 12px;
   font-family: var(--font-display);
