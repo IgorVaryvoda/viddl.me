@@ -4,7 +4,10 @@
       <div class="hero-badge">
         <span class="hero-icon">{{ platform.icon }}</span>
       </div>
-      <h1>{{ platform.name }} Video Downloader</h1>
+      <h1>
+        <span class="hero-platform">{{ platform.name }}</span>
+        Video Downloader
+      </h1>
       <p class="subtitle">Download {{ platform.name }} videos in high quality. Free, fast, no signup required.</p>
 
       <VideoDownloader
@@ -14,32 +17,57 @@
       />
 
       <div class="trust-badges">
-        <span class="badge">Free Forever</span>
-        <span class="badge">No Signup</span>
-        <span class="badge">High Quality</span>
-        <span class="badge">Fast Downloads</span>
+        <span class="badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          Free Forever
+        </span>
+        <span class="badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          No Signup
+        </span>
+        <span class="badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          High Quality
+        </span>
+        <span class="badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Fast Downloads
+        </span>
       </div>
     </section>
 
     <section class="how-to">
-      <h2>How to Download {{ platform.name }} Videos</h2>
+      <div class="section-header">
+        <span class="section-tag">Guide</span>
+        <h2>How to Download {{ platform.name }} Videos</h2>
+      </div>
       <div class="steps">
         <div class="step">
-          <div class="step-number">1</div>
+          <div class="step-number">01</div>
           <div class="step-content">
             <h3>Copy the Video URL</h3>
             <p>Go to {{ platform.name }} and find the video you want to download. Copy the URL from your browser's address bar or use the share button.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-number">2</div>
+          <div class="step-number">02</div>
           <div class="step-content">
             <h3>Paste the URL Above</h3>
             <p>Paste the {{ platform.name }} video URL into the input field above and click "Get Video" to fetch the available formats.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-number">3</div>
+          <div class="step-number">03</div>
           <div class="step-content">
             <h3>Download Your Video</h3>
             <p>Select your preferred quality and click to download. Your video will be saved as an MP4 file.</p>
@@ -49,27 +77,43 @@
     </section>
 
     <section class="features-section">
-      <h2>{{ platform.name }} Downloader Features</h2>
+      <div class="section-header">
+        <span class="section-tag">Features</span>
+        <h2>{{ platform.name }} Downloader Features</h2>
+      </div>
       <div class="features-grid">
         <div v-for="feature in platform.features" :key="feature" class="feature-item">
-          <span class="feature-check">✓</span>
+          <svg class="feature-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
           <span>{{ feature }}</span>
         </div>
       </div>
     </section>
 
     <section class="faq-section">
-      <h2>{{ platform.name }} Downloader FAQ</h2>
+      <div class="section-header">
+        <span class="section-tag">FAQ</span>
+        <h2>{{ platform.name }} Downloader FAQ</h2>
+      </div>
       <div class="faq-list">
         <details v-for="(faq, index) in platform.faqs" :key="index" class="faq-item">
-          <summary>{{ faq.q }}</summary>
+          <summary>
+            <span>{{ faq.q }}</span>
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </summary>
           <p>{{ faq.a }}</p>
         </details>
       </div>
     </section>
 
     <section class="other-platforms">
-      <h2>Download from Other Platforms</h2>
+      <div class="section-header">
+        <span class="section-tag">More Platforms</span>
+        <h2>Download from Other Platforms</h2>
+      </div>
       <div class="platform-links">
         <router-link
           v-for="p in otherPlatforms"
@@ -80,6 +124,9 @@
         >
           <span class="platform-link-icon">{{ p.icon }}</span>
           <span>{{ p.name }}</span>
+          <svg class="platform-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
         </router-link>
       </div>
     </section>
@@ -149,30 +196,37 @@ onMounted(() => {
 
 .hero {
   text-align: center;
-  padding: 2rem 0 3rem;
+  padding: 2rem 0 4rem;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  background: color-mix(in srgb, var(--platform-color) 15%, transparent);
-  border: 2px solid var(--platform-color);
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--platform-color) 0%, color-mix(in srgb, var(--platform-color) 60%, var(--accent-secondary)) 100%);
+  border-radius: 20px;
   margin-bottom: 1.5rem;
+  box-shadow: 0 20px 40px -20px var(--platform-color);
 }
 
 .hero-icon {
-  font-size: 2rem;
+  font-size: 2.25rem;
 }
 
 .hero h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-weight: 800;
   margin: 0 0 0.75rem 0;
-  color: var(--text);
+  line-height: 1.2;
+}
+
+.hero-platform {
+  background: linear-gradient(135deg, var(--text) 0%, var(--platform-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
@@ -193,51 +247,81 @@ onMounted(() => {
 }
 
 .badge {
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 100px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
-.how-to {
-  padding: 3rem 0;
-  border-top: 1px solid var(--border);
+.badge svg {
+  color: var(--accent);
 }
 
-.how-to h2 {
+.section-header {
   text-align: center;
-  font-size: 1.5rem;
-  margin: 0 0 2rem 0;
+  margin-bottom: 2.5rem;
+}
+
+.section-tag {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #09090b;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.how-to {
+  padding: 4rem 0;
+  border-top: 1px solid var(--border);
 }
 
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .step {
   display: flex;
-  gap: 1.25rem;
-  padding: 1.5rem;
+  gap: 1.5rem;
+  padding: 1.75rem;
   background: var(--bg-secondary);
-  border-radius: 12px;
   border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.3s;
+}
+
+.step:hover {
+  border-color: var(--accent);
+  transform: translateX(8px);
 }
 
 .step-number {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent);
-  color: white;
-  font-weight: 700;
-  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
 }
 
 .step-content h3 {
@@ -248,52 +332,45 @@ onMounted(() => {
 .step-content p {
   margin: 0;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .features-section {
-  padding: 3rem 0;
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
-}
-
-.features-section h2 {
-  text-align: center;
-  font-size: 1.5rem;
-  margin: 0 0 2rem 0;
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.875rem;
+  padding: 1.125rem 1.25rem;
   background: var(--bg-secondary);
-  border-radius: 8px;
   border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.feature-item:hover {
+  border-color: var(--accent);
 }
 
 .feature-check {
-  color: #22c55e;
-  font-weight: 700;
+  color: var(--success);
+  flex-shrink: 0;
 }
 
 .faq-section {
-  padding: 3rem 0;
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
-}
-
-.faq-section h2 {
-  text-align: center;
-  font-size: 1.5rem;
-  margin: 0 0 2rem 0;
 }
 
 .faq-list {
@@ -305,79 +382,115 @@ onMounted(() => {
   margin-bottom: 0.75rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.faq-item:hover {
+  border-color: var(--accent);
+}
+
+.faq-item[open] {
+  border-color: var(--accent);
 }
 
 .faq-item summary {
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   cursor: pointer;
   font-weight: 500;
   list-style: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  transition: background 0.2s;
 }
 
-.faq-item summary::after {
-  content: '+';
-  font-size: 1.25rem;
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary:hover {
+  background: var(--bg-tertiary);
+}
+
+.faq-chevron {
+  flex-shrink: 0;
   color: var(--text-secondary);
+  transition: transform 0.3s, color 0.2s;
 }
 
-.faq-item[open] summary::after {
-  content: '−';
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
 }
 
 .faq-item p {
-  padding: 0 1.25rem 1rem;
+  padding: 0 1.5rem 1.25rem;
   margin: 0;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .other-platforms {
-  padding: 3rem 0;
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
-}
-
-.other-platforms h2 {
-  text-align: center;
-  font-size: 1.5rem;
-  margin: 0 0 2rem 0;
 }
 
 .platform-links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
 }
 
 .platform-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
   background: var(--bg-secondary);
-  border: 2px solid var(--border);
-  border-radius: 100px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   color: var(--text);
   text-decoration: none;
-  transition: border-color 0.2s, background 0.2s;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .platform-link:hover {
   border-color: var(--platform-color);
-  background: color-mix(in srgb, var(--platform-color) 10%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.3);
+}
+
+.platform-link:hover .platform-link-arrow {
+  transform: translateX(4px);
+  color: var(--platform-color);
 }
 
 .platform-link-icon {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+}
+
+.platform-link-arrow {
+  color: var(--text-secondary);
+  transition: all 0.2s;
 }
 
 @media (max-width: 768px) {
-  .hero h1 {
+  .hero {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .hero-badge {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+  }
+
+  .hero-icon {
     font-size: 1.75rem;
   }
 
@@ -387,11 +500,21 @@ onMounted(() => {
 
   .step {
     flex-direction: column;
-    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem;
   }
 
   .step-number {
-    margin: 0 auto;
+    font-size: 1.75rem;
+  }
+
+  .platform-links {
+    gap: 0.75rem;
+  }
+
+  .platform-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
   }
 }
 </style>

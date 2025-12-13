@@ -1,4 +1,4 @@
-const CACHE_NAME = 'viddl-v1';
+const CACHE_NAME = 'viddl-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

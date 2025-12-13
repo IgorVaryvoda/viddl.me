@@ -1,77 +1,79 @@
 <template>
   <div class="home">
     <section class="hero">
-      <h1>Download Videos from Anywhere</h1>
-      <p class="subtitle">Fast, free, and easy. No signup required.</p>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          Free & Open Source
+        </div>
+        <h1>
+          <span class="hero-line">Download videos</span>
+          <span class="hero-line hero-gradient">from anywhere</span>
+        </h1>
+        <p class="hero-subtitle">
+          Grab videos from YouTube, Twitter, Instagram, and more.
+          No signup. No limits. Just paste and download.
+        </p>
+      </div>
 
-      <VideoDownloader
-        placeholder="Paste video URL here..."
-        @download-complete="handleDownloadComplete"
-      />
+      <div class="downloader-wrapper">
+        <VideoDownloader
+          placeholder="Paste any video URL..."
+          @download-complete="handleDownloadComplete"
+        />
+      </div>
 
-      <div class="supported-platforms">
-        <router-link
-          v-for="platform in platforms"
-          :key="platform.path"
-          :to="`/${platform.path}`"
-          class="platform-chip"
-          :style="{ '--platform-color': platform.color }"
-        >
-          <span class="platform-icon">{{ platform.icon }}</span>
-          <span>{{ platform.name }}</span>
-        </router-link>
+      <div class="platforms-row">
+        <span class="platforms-label">Supported:</span>
+        <div class="platform-tags">
+          <router-link
+            v-for="platform in platforms"
+            :key="platform.path"
+            :to="`/${platform.path}`"
+            class="platform-tag"
+          >
+            <span class="platform-icon">{{ platform.icon }}</span>
+            {{ platform.name }}
+          </router-link>
+        </div>
       </div>
     </section>
 
-    <section class="how-it-works">
-      <h2>How It Works</h2>
+    <section class="steps-section">
+      <div class="section-header">
+        <span class="section-tag">How it works</span>
+        <h2>Three simple steps</h2>
+      </div>
       <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Copy URL</h3>
-          <p>Copy the video URL from YouTube, Twitter, Instagram, or any supported site</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>Paste & Fetch</h3>
-          <p>Paste the URL above and click "Get Video" to fetch available formats</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Download</h3>
-          <p>Choose your preferred quality and download the video instantly</p>
+        <div class="step" v-for="(step, index) in steps" :key="index">
+          <div class="step-number">{{ String(index + 1).padStart(2, '0') }}</div>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.desc }}</p>
         </div>
       </div>
     </section>
 
-    <section class="features">
-      <h2>Why Choose viddl.me?</h2>
-      <div class="feature-grid">
-        <div class="feature">
-          <div class="feature-icon">⚡</div>
-          <h3>Lightning Fast</h3>
-          <p>No waiting. Downloads start instantly with our optimized servers.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🔒</div>
-          <h3>Secure & Private</h3>
-          <p>No data stored. No tracking. Your downloads are completely private.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">💯</div>
-          <h3>100% Free</h3>
-          <p>No hidden fees, no subscriptions, no limits. Completely free forever.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">📱</div>
-          <h3>Works Everywhere</h3>
-          <p>Download on any device - desktop, tablet, or mobile phone.</p>
+    <section class="features-section">
+      <div class="section-header">
+        <span class="section-tag">Why viddl.me</span>
+        <h2>Built different</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" v-for="feature in features" :key="feature.title">
+          <div class="feature-icon-wrapper">
+            <div class="feature-icon">{{ feature.icon }}</div>
+          </div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.desc }}</p>
         </div>
       </div>
     </section>
 
     <section class="platforms-section">
-      <h2>Supported Platforms</h2>
+      <div class="section-header">
+        <span class="section-tag">Platforms</span>
+        <h2>Download from your favorites</h2>
+      </div>
       <div class="platform-cards">
         <router-link
           v-for="platform in platforms"
@@ -81,34 +83,39 @@
           :style="{ '--platform-color': platform.color }"
         >
           <div class="platform-card-icon">{{ platform.icon }}</div>
-          <h3>{{ platform.name }}</h3>
-          <p>Download {{ platform.name }} videos</p>
-          <span class="platform-arrow">→</span>
+          <div class="platform-card-content">
+            <h3>{{ platform.name }}</h3>
+            <p>Download {{ platform.name }} videos</p>
+          </div>
+          <svg class="platform-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
         </router-link>
       </div>
     </section>
 
-    <section class="faq-preview">
-      <h2>Frequently Asked Questions</h2>
+    <section class="faq-section">
+      <div class="section-header">
+        <span class="section-tag">FAQ</span>
+        <h2>Common questions</h2>
+      </div>
       <div class="faq-list">
-        <details class="faq-item">
-          <summary>Is viddl.me free to use?</summary>
-          <p>Yes! viddl.me is completely free with no hidden fees, subscriptions, or download limits. We believe everyone should have access to download their favorite videos.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Do I need to create an account?</summary>
-          <p>No account or signup required. Just paste your video URL and download. It's that simple.</p>
-        </details>
-        <details class="faq-item">
-          <summary>What video quality can I download?</summary>
-          <p>We offer multiple quality options including 360p, 480p, 720p HD, 1080p Full HD, and 4K when available from the source.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Is downloading videos legal?</summary>
-          <p>Downloading videos for personal use is generally acceptable. However, please respect copyright laws and the platform's terms of service. Don't download content you don't have rights to redistribute.</p>
+        <details class="faq-item" v-for="(faq, index) in faqs" :key="index">
+          <summary>
+            <span>{{ faq.q }}</span>
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </summary>
+          <p>{{ faq.a }}</p>
         </details>
       </div>
-      <router-link to="/faq" class="view-all-faq">View All FAQs →</router-link>
+      <router-link to="/faq" class="faq-link">
+        View all FAQs
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </router-link>
     </section>
   </div>
 </template>
@@ -125,6 +132,26 @@ const platforms = computed(() =>
   }))
 )
 
+const steps = [
+  { title: 'Copy URL', desc: 'Copy the video link from YouTube, Twitter, Instagram, or any supported platform.' },
+  { title: 'Paste & fetch', desc: 'Paste the URL above and click "Get Video" to see available formats.' },
+  { title: 'Download', desc: 'Choose your preferred quality and download the video instantly.' }
+]
+
+const features = [
+  { icon: '\u26A1', title: 'Lightning fast', desc: 'Optimized servers deliver your downloads instantly. No waiting.' },
+  { icon: '\uD83D\uDD12', title: 'Private & secure', desc: 'No tracking, no data stored. Your downloads stay private.' },
+  { icon: '\uD83D\uDCB0', title: '100% free', desc: 'No hidden fees, no subscriptions. Free forever.' },
+  { icon: '\uD83C\uDF10', title: 'Works everywhere', desc: 'Desktop, tablet, or phone. Download on any device.' }
+]
+
+const faqs = [
+  { q: 'Is viddl.me free to use?', a: 'Yes! Completely free with no hidden fees, subscriptions, or download limits.' },
+  { q: 'Do I need to create an account?', a: 'No account required. Just paste your URL and download instantly.' },
+  { q: 'What video quality can I download?', a: 'We offer multiple quality options including 360p, 720p HD, 1080p, and 4K when available.' },
+  { q: 'Is downloading videos legal?', a: 'Downloading for personal use is generally acceptable. Please respect copyright laws.' }
+]
+
 const handleDownloadComplete = (data) => {
   console.log('Download complete:', data)
 }
@@ -137,66 +164,143 @@ const handleDownloadComplete = (data) => {
 }
 
 .hero {
+  padding: 3rem 0 4rem;
   text-align: center;
-  padding: 2rem 0 3rem;
 }
 
-.hero h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 0.75rem 0;
-  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.hero-content {
+  margin-bottom: 2.5rem;
 }
 
-.subtitle {
-  font-size: 1.25rem;
-  color: var(--text-secondary);
-  margin: 0 0 2rem 0;
-}
-
-.supported-platforms {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 2rem;
-}
-
-.platform-chip {
-  display: flex;
+.hero-badge {
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 100px;
-  color: var(--text);
-  text-decoration: none;
-  font-size: 0.875rem;
-  transition: border-color 0.2s, background 0.2s;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
 }
 
-.platform-chip:hover {
-  border-color: var(--platform-color);
-  background: color-mix(in srgb, var(--platform-color) 10%, transparent);
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 1.5rem 0;
+}
+
+.hero-line {
+  display: block;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.downloader-wrapper {
+  margin-bottom: 2rem;
+}
+
+.platforms-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.platforms-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.platform-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.platform-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.platform-tag:hover {
+  background: var(--bg-tertiary);
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .platform-icon {
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
-.how-it-works {
-  padding: 3rem 0;
-  border-top: 1px solid var(--border);
-}
-
-.how-it-works h2 {
+.section-header {
   text-align: center;
-  font-size: 1.75rem;
-  margin: 0 0 2rem 0;
+  margin-bottom: 3rem;
+}
+
+.section-tag {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #09090b;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.steps-section {
+  padding: 4rem 0;
+  border-top: 1px solid var(--border);
 }
 
 .steps {
@@ -207,26 +311,34 @@ const handleDownloadComplete = (data) => {
 
 .step {
   text-align: center;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.3s;
+}
+
+.step:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px -20px rgba(0, 240, 255, 0.2);
 }
 
 .step-number {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  background: var(--accent);
-  color: white;
-  font-size: 1.25rem;
-  font-weight: 700;
-  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 1rem;
 }
 
 .step h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem 0;
 }
 
 .step p {
@@ -236,41 +348,51 @@ const handleDownloadComplete = (data) => {
   line-height: 1.5;
 }
 
-.features {
-  padding: 3rem 0;
+.features-section {
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
 }
 
-.features h2 {
-  text-align: center;
-  font-size: 1.75rem;
-  margin: 0 0 2rem 0;
-}
-
-.feature-grid {
+.features-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
 
-.feature {
-  padding: 1.5rem;
+.feature-card {
+  padding: 2rem;
   background: var(--bg-secondary);
-  border-radius: 12px;
   border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.3s;
+}
+
+.feature-card:hover {
+  border-color: var(--border);
+  background: var(--bg-tertiary);
+}
+
+.feature-icon-wrapper {
+  margin-bottom: 1.25rem;
 }
 
 .feature-icon {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  border-radius: 12px;
+  font-size: 1.5rem;
 }
 
-.feature h3 {
-  margin: 0 0 0.5rem 0;
+.feature-card h3 {
   font-size: 1.125rem;
+  margin: 0 0 0.5rem 0;
 }
 
-.feature p {
+.feature-card p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.9375rem;
@@ -278,14 +400,8 @@ const handleDownloadComplete = (data) => {
 }
 
 .platforms-section {
-  padding: 3rem 0;
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
-}
-
-.platforms-section h2 {
-  text-align: center;
-  font-size: 1.75rem;
-  margin: 0 0 2rem 0;
 }
 
 .platform-cards {
@@ -295,140 +411,170 @@ const handleDownloadComplete = (data) => {
 }
 
 .platform-card {
-  position: relative;
-  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
   background: var(--bg-secondary);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
   text-decoration: none;
   color: var(--text);
-  transition: border-color 0.2s, transform 0.2s;
+  transition: all 0.3s;
 }
 
 .platform-card:hover {
-  border-color: var(--platform-color);
   transform: translateY(-2px);
+  border-color: var(--platform-color, var(--accent));
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.platform-card:hover .platform-arrow {
+  transform: translateX(4px);
+  color: var(--platform-color, var(--accent));
 }
 
 .platform-card-icon {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.platform-card-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .platform-card h3 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
+  margin: 0 0 0.125rem 0;
 }
 
 .platform-card p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .platform-arrow {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  flex-shrink: 0;
   color: var(--text-secondary);
-  transition: color 0.2s, transform 0.2s;
+  transition: all 0.2s;
 }
 
-.platform-card:hover .platform-arrow {
-  color: var(--platform-color);
-  transform: translateX(4px);
-}
-
-.faq-preview {
-  padding: 3rem 0;
+.faq-section {
+  padding: 4rem 0;
   border-top: 1px solid var(--border);
-}
-
-.faq-preview h2 {
-  text-align: center;
-  font-size: 1.75rem;
-  margin: 0 0 2rem 0;
 }
 
 .faq-list {
   max-width: 700px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
 }
 
 .faq-item {
   margin-bottom: 0.75rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .faq-item summary {
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   cursor: pointer;
   font-weight: 500;
   list-style: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  transition: background 0.2s;
 }
 
-.faq-item summary::after {
-  content: '+';
-  font-size: 1.25rem;
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary:hover {
+  background: var(--bg-tertiary);
+}
+
+.faq-chevron {
+  flex-shrink: 0;
   color: var(--text-secondary);
+  transition: transform 0.3s;
 }
 
-.faq-item[open] summary::after {
-  content: '−';
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
 }
 
 .faq-item p {
-  padding: 0 1.25rem 1rem;
+  padding: 0 1.5rem 1.25rem;
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.6;
 }
 
-.view-all-faq {
-  display: block;
-  text-align: center;
-  margin-top: 1.5rem;
+.faq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--accent);
   text-decoration: none;
   font-weight: 500;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  transition: gap 0.2s;
 }
 
-.view-all-faq:hover {
-  text-decoration: underline;
+.faq-link:hover {
+  gap: 0.75rem;
 }
 
 @media (max-width: 768px) {
-  .hero h1 {
-    font-size: 1.75rem;
+  .hero {
+    padding: 2rem 0 3rem;
   }
 
-  .subtitle {
-    font-size: 1rem;
+  .hero-subtitle {
+    font-size: 1.0625rem;
+  }
+
+  .platforms-row {
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .steps {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
-  .feature-grid {
+  .step {
+    padding: 1.5rem;
+  }
+
+  .step-number {
+    font-size: 2.5rem;
+  }
+
+  .features-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
   }
 
   .platform-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .platform-cards {
     grid-template-columns: 1fr;
+  }
+
+  .section-header h2 {
+    font-size: 1.75rem;
   }
 }
 </style>

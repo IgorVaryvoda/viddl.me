@@ -19,7 +19,10 @@
           :disabled="loading"
           aria-label="Paste URL from clipboard"
         >
-          <span class="paste-icon"></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
         </button>
       </div>
       <button
@@ -28,28 +31,58 @@
         class="get-btn"
         aria-label="Fetch video information"
       >
-        {{ loading ? 'Loading...' : 'Get Video' }}
+        <span v-if="loading" class="btn-loading">
+          <svg class="spinner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          Loading
+        </span>
+        <span v-else class="btn-content">
+          Get Video
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
       </button>
     </div>
 
     <div v-if="urlError" class="url-hint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
       {{ urlError }}
     </div>
 
     <div v-if="error" class="error" role="alert">
-      <span class="error-icon"></span>
+      <div class="error-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6"/>
+        </svg>
+      </div>
       <div class="error-content">
         <p class="error-message">{{ error }}</p>
         <button v-if="canRetry" @click="retryLastAction" class="retry-btn" aria-label="Retry failed operation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 4v6h6M23 20v-6h-6"/>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+          </svg>
           Retry
         </button>
       </div>
     </div>
 
     <div v-if="downloadProgress" class="progress-indicator" role="status" aria-live="polite">
-      <div class="spinner" aria-hidden="true"></div>
-      <p>{{ downloadProgress }}</p>
-      <p v-if="estimatedTimeRemaining" class="time-remaining">{{ estimatedTimeRemaining }}</p>
+      <div class="progress-spinner">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      </div>
+      <div class="progress-text">
+        <p>{{ downloadProgress }}</p>
+        <p v-if="estimatedTimeRemaining" class="time-remaining">{{ estimatedTimeRemaining }}</p>
+      </div>
     </div>
 
     <div v-if="loading" class="loader" role="status" aria-live="polite">
@@ -73,7 +106,7 @@
 
     <div v-if="videoInfo && !loading" class="video-info">
       <div v-if="videoInfo.is_multi_video" class="multi-video-selection">
-        <h4>Select Video to Download</h4>
+        <h4>Select video to download</h4>
         <div class="video-list" role="list">
           <button
             v-for="video in videoInfo.multi_videos"
@@ -94,6 +127,9 @@
               <span class="video-item-title">{{ video.title || 'Untitled' }}</span>
               <span class="video-item-duration">{{ formatDuration(video.duration) }}</span>
             </div>
+            <svg class="video-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -108,13 +144,19 @@
           />
           <div class="video-meta">
             <h3>{{ videoInfo.title }}</h3>
-            <p>{{ videoInfo.uploader }}</p>
-            <p>{{ formatDuration(videoInfo.duration) }}</p>
+            <p class="video-uploader">{{ videoInfo.uploader }}</p>
+            <p class="video-duration">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              {{ formatDuration(videoInfo.duration) }}
+            </p>
           </div>
         </div>
 
         <div v-if="videoInfo.formats && videoInfo.formats.length > 0" class="formats">
-          <h4 id="quality-heading">Select Quality (MP4)</h4>
+          <h4 id="quality-heading">Select quality</h4>
           <div class="format-grid" role="list" aria-labelledby="quality-heading">
             <button
               v-for="format in videoInfo.formats"
@@ -126,6 +168,11 @@
             >
               <span class="format-quality">{{ format.quality }}</span>
               <span class="format-size">{{ formatSize(format.filesize) }}</span>
+              <svg class="format-download-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -137,7 +184,20 @@
           class="download-best-btn"
           aria-label="Download video in best available quality"
         >
-          {{ downloading ? 'Downloading...' : 'Download Best Quality' }}
+          <span v-if="downloading" class="btn-loading">
+            <svg class="spinner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Downloading...
+          </span>
+          <span v-else class="btn-content">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Best Quality
+          </span>
         </button>
       </div>
     </div>
@@ -520,7 +580,7 @@ const formatSize = (bytes) => {
 <style scoped>
 .downloader {
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
 }
 
@@ -537,19 +597,24 @@ const formatSize = (bytes) => {
 
 .input-wrapper input {
   width: 100%;
-  padding: 1rem 3rem 1rem 1rem;
+  padding: 1rem 3.5rem 1rem 1.25rem;
   border: 2px solid var(--border);
   border-radius: 12px;
   background: var(--bg-secondary);
   color: var(--text);
+  font-family: var(--font-body);
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-secondary);
 }
 
 .input-wrapper input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+  box-shadow: 0 0 0 4px var(--accent-glow), 0 0 30px var(--accent-glow);
 }
 
 .paste-btn {
@@ -557,39 +622,41 @@ const formatSize = (bytes) => {
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-  font-size: 1.2rem;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  border-radius: 6px;
 }
 
 .paste-btn:hover {
-  opacity: 1;
-}
-
-.paste-icon::before {
-  content: '📋';
+  color: var(--accent);
+  background: var(--bg-tertiary);
 }
 
 .get-btn {
   padding: 1rem 1.5rem;
-  background: var(--accent);
-  color: white;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  color: #09090b;
   border: none;
   border-radius: 12px;
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: all 0.2s;
   white-space: nowrap;
 }
 
 .get-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -10px var(--accent-glow);
+}
+
+.get-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .get-btn:disabled {
@@ -597,69 +664,14 @@ const formatSize = (bytes) => {
   cursor: not-allowed;
 }
 
-.url-hint {
-  color: var(--accent);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.error {
+.btn-content,
+.btn-loading {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 12px;
-  margin-bottom: 1rem;
-}
-
-.error-icon::before {
-  content: '⚠️';
-}
-
-.error-content {
-  flex: 1;
-}
-
-.error-message {
-  color: #ef4444;
-  margin: 0;
-}
-
-.retry-btn {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 8px;
-  color: #ef4444;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.retry-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
-}
-
-.progress-indicator {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
+.spinner-icon {
   animation: spin 1s linear infinite;
 }
 
@@ -667,20 +679,106 @@ const formatSize = (bytes) => {
   to { transform: rotate(360deg); }
 }
 
+.url-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0 0.25rem;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.error-icon {
+  color: var(--error);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-message {
+  color: var(--error);
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: var(--error);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.progress-spinner svg {
+  animation: spin 1s linear infinite;
+  color: var(--accent);
+}
+
+.progress-text {
+  flex: 1;
+}
+
+.progress-text p {
+  margin: 0;
+  font-weight: 500;
+}
+
 .time-remaining {
   font-size: 0.875rem;
   color: var(--text-secondary);
+  font-weight: 400 !important;
+  margin-top: 0.25rem !important;
 }
 
 .loader {
   padding: 1.5rem;
   background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 1rem;
 }
 
 .skeleton-loader {
-  animation: pulse 1.5s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
@@ -691,13 +789,13 @@ const formatSize = (bytes) => {
 .skeleton-header {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .skeleton-thumbnail {
-  width: 120px;
-  height: 68px;
-  background: var(--border);
+  width: 140px;
+  height: 80px;
+  background: var(--bg-tertiary);
   border-radius: 8px;
 }
 
@@ -710,14 +808,14 @@ const formatSize = (bytes) => {
 
 .skeleton-title {
   height: 1.25rem;
-  background: var(--border);
+  background: var(--bg-tertiary);
   border-radius: 4px;
-  width: 80%;
+  width: 85%;
 }
 
 .skeleton-subtitle {
   height: 1rem;
-  background: var(--border);
+  background: var(--bg-tertiary);
   border-radius: 4px;
   width: 60%;
 }
@@ -733,47 +831,76 @@ const formatSize = (bytes) => {
 
 .skeleton-format {
   flex: 1;
-  height: 3rem;
-  background: var(--border);
+  height: 3.5rem;
+  background: var(--bg-tertiary);
   border-radius: 8px;
 }
 
 .loading-text {
   text-align: center;
   color: var(--text-secondary);
-  margin-top: 1rem;
+  margin: 1rem 0 0;
+  font-size: 0.9375rem;
 }
 
 .video-info {
   background: var(--bg-secondary);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 1.5rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .video-header {
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
 .thumbnail {
-  width: 160px;
-  height: 90px;
+  width: 180px;
+  height: 100px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .video-meta {
   flex: 1;
+  min-width: 0;
 }
 
 .video-meta h3 {
   margin: 0 0 0.5rem 0;
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.video-meta p {
+.video-uploader {
+  margin: 0 0 0.375rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.video-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.875rem;
@@ -782,12 +909,15 @@ const formatSize = (bytes) => {
 .formats h4 {
   margin: 0 0 1rem 0;
   font-size: 0.875rem;
+  font-weight: 600;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .format-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 0.75rem;
 }
 
@@ -795,18 +925,38 @@ const formatSize = (bytes) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.75rem;
+  gap: 0.375rem;
+  padding: 1rem 0.75rem;
   background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.format-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .format-btn:hover:not(:disabled) {
   border-color: var(--accent);
-  background: rgba(255, 107, 53, 0.1);
+  transform: translateY(-2px);
+}
+
+.format-btn:hover:not(:disabled)::before {
+  opacity: 0.1;
+}
+
+.format-btn:hover:not(:disabled) .format-download-icon {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .format-btn:disabled {
@@ -815,39 +965,56 @@ const formatSize = (bytes) => {
 }
 
 .format-quality {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
   color: var(--text);
+  position: relative;
 }
 
 .format-size {
   font-size: 0.75rem;
   color: var(--text-secondary);
+  position: relative;
+}
+
+.format-download-icon {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s;
+  color: var(--accent);
 }
 
 .download-best-btn {
   width: 100%;
-  padding: 1rem;
-  background: var(--accent);
-  color: white;
+  padding: 1.125rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  color: #09090b;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .download-best-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -10px var(--accent-glow);
 }
 
 .download-best-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .multi-video-selection h4 {
   margin: 0 0 1rem 0;
+  font-size: 1rem;
 }
 
 .video-list {
@@ -860,31 +1027,39 @@ const formatSize = (bytes) => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem;
+  padding: 0.875rem;
   background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .video-item-btn:hover:not(:disabled) {
   border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.video-item-btn:hover:not(:disabled) .video-item-arrow {
+  opacity: 1;
+  color: var(--accent);
 }
 
 .video-item-thumbnail {
   width: 80px;
   height: 45px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .video-item-meta {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
+  min-width: 0;
 }
 
 .video-item-number {
@@ -895,11 +1070,21 @@ const formatSize = (bytes) => {
 .video-item-title {
   font-weight: 500;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .video-item-duration {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
+}
+
+.video-item-arrow {
+  flex-shrink: 0;
+  opacity: 0;
+  color: var(--text-secondary);
+  transition: all 0.2s;
 }
 
 @media (max-width: 640px) {
@@ -909,16 +1094,22 @@ const formatSize = (bytes) => {
 
   .get-btn {
     width: 100%;
+    justify-content: center;
   }
 
   .video-header {
     flex-direction: column;
+    gap: 1rem;
   }
 
   .thumbnail {
     width: 100%;
     height: auto;
     aspect-ratio: 16/9;
+  }
+
+  .format-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>
