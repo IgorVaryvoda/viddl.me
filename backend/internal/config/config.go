@@ -32,7 +32,6 @@ var defaultDomains = []string{
 	"x.com",
 	"instagram.com",
 	"facebook.com",
-	"tiktok.com",
 	"vimeo.com",
 	"reddit.com",
 	"twitch.tv",
