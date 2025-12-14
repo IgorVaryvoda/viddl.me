@@ -200,9 +200,9 @@ const handleDownloadComplete = (data) => {
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 8vw, 4rem);
-  font-weight: 800;
-  line-height: 1.1;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
   margin: 0 0 1.5rem 0;
 }
 
