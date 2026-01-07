@@ -39,6 +39,7 @@ var defaultDomains = []string{
 	"sirv.com",
 	"v3.fal.media",
 	"fal.media",
+	"public.blob.vercel-storage.com",
 }
 
 func Load() *Config {
