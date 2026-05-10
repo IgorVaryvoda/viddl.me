@@ -9,3 +9,4 @@ backend/viddl-server
 
 frontend/dist/
 frontend/node_modules/
+backend/backend
