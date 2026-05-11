@@ -32,6 +32,39 @@ func New(tmpDir, cookiesFile, maxFilesize string) *Downloader {
 	}
 }
 
+func (d *Downloader) hasUsableCookiesFile() bool {
+	if d.cookiesFile == "" {
+		return false
+	}
+
+	info, err := os.Stat(d.cookiesFile)
+	if err != nil {
+		log.Printf("WARN: YTDLP_COOKIES is configured but not usable, ignoring it: %v", err)
+		return false
+	}
+	if info.IsDir() {
+		log.Printf("WARN: YTDLP_COOKIES points to a directory, ignoring it: %s", d.cookiesFile)
+		return false
+	}
+
+	file, err := os.OpenFile(d.cookiesFile, os.O_RDWR, 0600)
+	if err != nil {
+		log.Printf("WARN: YTDLP_COOKIES is not readable/writable, ignoring it: %v", err)
+		return false
+	}
+	file.Close()
+
+	return true
+}
+
+func (d *Downloader) appendCookiesArgs(args []string) []string {
+	if !d.hasUsableCookiesFile() {
+		return args
+	}
+	log.Printf("INFO: Using cookies file: %s", d.cookiesFile)
+	return append(args, "--cookies", d.cookiesFile)
+}
+
 func (d *Downloader) GetVideoInfo(videoURL string) (*models.VideoInfo, error) {
 	// Skip multi-video check for YouTube single videos (not playlists)
 	isYouTube := strings.Contains(strings.ToLower(videoURL), "youtube.com") ||
@@ -55,9 +88,7 @@ func (d *Downloader) GetVideoInfo(videoURL string) (*models.VideoInfo, error) {
 func (d *Downloader) checkMultipleVideos(videoURL string) ([]models.VideoEntry, error) {
 	args := []string{"--flat-playlist", "--dump-json", "--no-warnings"}
 
-	if d.cookiesFile != "" {
-		args = append(args, "--cookies", d.cookiesFile)
-	}
+	args = d.appendCookiesArgs(args)
 	args = append(args, videoURL)
 
 	log.Printf("INFO: Checking for multiple videos with args: %v", args)
@@ -100,17 +131,14 @@ func (d *Downloader) getSingleVideoInfo(videoURL string) (*models.VideoInfo, err
 		strings.Contains(strings.ToLower(videoURL), "youtu.be")
 
 	if isYouTube {
-		if d.cookiesFile != "" {
+		if d.hasUsableCookiesFile() {
 			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
 		} else {
 			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
 		}
 	}
 
-	if d.cookiesFile != "" {
-		log.Printf("INFO: Using cookies file: %s", d.cookiesFile)
-		args = append(args, "--cookies", d.cookiesFile)
-	}
+	args = d.appendCookiesArgs(args)
 	args = append(args, videoURL)
 
 	log.Printf("INFO: Running yt-dlp with args: %v", args)
@@ -304,7 +332,7 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 	args := []string{"-f", formatSpec, "-o", outputTemplate, "--merge-output-format", "mp4", "--no-warnings", "--restrict-filenames"}
 
 	if isYouTube {
-		if d.cookiesFile != "" {
+		if d.hasUsableCookiesFile() {
 			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
 		} else {
 			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
@@ -321,9 +349,7 @@ func (d *Downloader) buildDownloadArgs(videoURL, format, outputTemplate string, 
 
 	args = append(args, "--max-filesize", d.maxFilesize)
 
-	if d.cookiesFile != "" {
-		args = append(args, "--cookies", d.cookiesFile)
-	}
+	args = d.appendCookiesArgs(args)
 
 	args = append(args, videoURL)
 	return args
@@ -394,7 +420,7 @@ func (d *Downloader) buildAudioArgs(videoURL, audioFormat, outputTemplate string
 	args := []string{"-x", "--audio-format", audioFormat, "-o", outputTemplate, "--no-warnings", "--restrict-filenames"}
 
 	if isYouTube {
-		if d.cookiesFile != "" {
+		if d.hasUsableCookiesFile() {
 			args = append(args, "--extractor-args", "youtube:player_client=default,web_safari")
 		} else {
 			args = append(args, "--extractor-args", "youtube:player_client=web_safari")
@@ -409,9 +435,7 @@ func (d *Downloader) buildAudioArgs(videoURL, audioFormat, outputTemplate string
 
 	args = append(args, "--max-filesize", d.maxFilesize)
 
-	if d.cookiesFile != "" {
-		args = append(args, "--cookies", d.cookiesFile)
-	}
+	args = d.appendCookiesArgs(args)
 
 	args = append(args, videoURL)
 	return args
@@ -476,4 +500,3 @@ func getQualityLabel(height int) string {
 		return fmt.Sprintf("%dp", height)
 	}
 }
-
