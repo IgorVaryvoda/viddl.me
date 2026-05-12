@@ -118,7 +118,7 @@ YTDLP_COOKIES=/path/to/cookies.txt          # Optional: Path to cookies file for
 - **ALLOWED_ORIGINS**: Comma-separated list of allowed CORS origins for the frontend
 - **ALLOWED_DOMAINS**: Comma-separated list of allowed video platform domains (overrides defaults)
 - **MAX_DOWNLOAD_SIZE**: Maximum allowed file size for downloads (uses yt-dlp syntax: K, M, G)
-- **YTDLP_COOKIES**: Path to a Netscape-format cookies file for downloading age-restricted or private videos
+- **YTDLP_COOKIES**: Optional path to a Netscape-format cookies file for authenticated YouTube downloads. The backend only passes this to yt-dlp when the file exists and is readable/writable by the service user; otherwise it falls back to cookieless mode. Do not use Igor's personal Google account cookies. See `docs/youtube-cookie-runbook.md` for the production refresh procedure.
 
 ## Production Deployment
 
@@ -148,7 +148,7 @@ RestartSec=5s
 Environment="PORT=3000"
 Environment="ALLOWED_ORIGINS=https://viddl.me,https://www.viddl.me"
 Environment="MAX_DOWNLOAD_SIZE=2G"
-Environment="YTDLP_COOKIES=/var/www/viddl.me/cookies.txt"
+Environment="YTDLP_COOKIES=/var/www/viddl.me/backend/cookies.txt"
 
 # Logging
 StandardOutput=journal

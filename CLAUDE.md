@@ -64,4 +64,4 @@ Key variables (set in backend `.env` or environment):
 - `ALLOWED_ORIGINS` - CORS origins (comma-separated)
 - `ALLOWED_DOMAINS` - Video platform whitelist (comma-separated)
 - `MAX_DOWNLOAD_SIZE` - Max file size (e.g., "2G", "500M")
-- `YTDLP_COOKIES` - Path to cookies file for authenticated downloads
+- `YTDLP_COOKIES` - Optional path to a Netscape-format cookies file. Use a dedicated service account if cookies are needed; never use personal-account cookies. The backend skips unusable files and falls back to cookieless mode.
